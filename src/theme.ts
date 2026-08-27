@@ -95,7 +95,13 @@ export const pieces = {
  * case précise au doigt. On y bascule au toucher du plateau, pour jouer.
  */
 export const cameras = {
-  topDown: { position: [0, 12, 0.001] as const, zoom: 40, fov: undefined },
+  /**
+   * Vue de jeu. Légèrement inclinée, pas à 90° pile : à la verticale exacte la 3D
+   * ressemble à de la 2D et on perd le volume des pièces. L'inclinaison reste faible
+   * pour que les cases gardent des tailles comparables et que le doigt reste précis.
+   * La caméra est **orthographique** : aucune déformation de perspective.
+   */
+  topDown: { position: [0, 12, 3.6] as const, zoom: 40, fov: undefined },
   iso: { position: [0, 11, 11] as const, zoom: undefined, fov: 34 }
 } as const
 
