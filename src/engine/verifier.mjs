@@ -64,16 +64,20 @@ function installerFauxWorker(scenario) {
     }
 
     emettre(lignes) {
-      const texte = lignes.join('\n') + '\n'
-      // Découpage volontairement absurde : 3 morceaux de tailles inégales.
-      const coupures = [Math.floor(texte.length * 0.37), Math.floor(texte.length * 0.71)]
-      const morceaux = [
-        texte.slice(0, coupures[0]),
-        texte.slice(coupures[0], coupures[1]),
-        texte.slice(coupures[1])
-      ]
-      for (const m of morceaux) {
-        setTimeout(() => this.onmessage?.({ data: m }), 0)
+      // Fidèle au transport réel, vérifié dans le navigateur : `stockfish.js` envoie
+      // **une ligne complète par postMessage**, sans `\n` final, et ne coupe jamais
+      // au milieu d'une ligne — contrairement à un flux stdout brut.
+      //
+      // Une version antérieure de ce faux worker coupait exprès à 37 % et 71 % du
+      // texte. C'était plus sévère que la réalité, et ça a coûté cher : la
+      // « correction » faite pour lui plaire a empêché le vrai moteur de démarrer.
+      // Un test doit reproduire le transport, pas en inventer un pire.
+      //
+      // On garde en revanche le cas « plusieurs lignes dans un seul message », lui
+      // bien réel, en les groupant deux par deux.
+      for (let i = 0; i < lignes.length; i += 2) {
+        const paquet = lignes.slice(i, i + 2).join('\n')
+        setTimeout(() => this.onmessage?.({ data: paquet }), 0)
       }
     }
 
@@ -167,7 +171,7 @@ async function main() {
   }
 
   // ── 2. pilotage UCI
-  console.log('\n2. pilotage UCI (faux Worker, lignes mal découpées)')
+  console.log('\n2. pilotage UCI (faux Worker, transport fidèle au réel)')
   installerFauxWorker(scenarioCandidats([30, -120, -390, -640, -1200], [
     'g8f6',
     'd7d6',

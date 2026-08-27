@@ -101,15 +101,21 @@ export const cameras = {
    * pour que les cases gardent des tailles comparables et que le doigt reste précis.
    * La caméra est **orthographique** : aucune déformation de perspective.
    */
-  topDown: { position: [0, 12, 3.6] as const, zoom: 40, fov: undefined },
+  topDown: { position: [0, 12, 3.6] as const, zoom: 200, fov: undefined },
   iso: { position: [0, 11, 11] as const, zoom: undefined, fov: 34 }
 } as const
 
 /**
- * Marge autour du plateau en vue de dessus, en multiples de son côté. Au-delà de 1,
- * le plateau ne touche plus les bords de l'écran — on respire.
+ * Marge autour du plateau, en multiples de son côté. Deux valeurs, parce que les
+ * deux poses ne servent pas à la même chose :
+ *
+ * - **jeu** : serré. Il vise des cases au doigt sur un téléphone, chaque pixel de
+ *   case compte. Juste assez de marge pour ne pas coller aux bords.
+ * - **vitrine** : aéré. L'échiquier est le cadeau, on le montre en entier avec de
+ *   l'air autour.
  */
-export const MARGE_CADRAGE = 1.25
+export const MARGE_CADRAGE_JEU = 1.04
+export const MARGE_CADRAGE_VITRINE = 1.18
 
 /** Durée de la transition entre les deux poses, en millisecondes. */
 export const DUREE_TRANSITION_CAMERA = 550

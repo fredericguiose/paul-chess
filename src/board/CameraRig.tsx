@@ -29,7 +29,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import { useSpring } from '@react-spring/three'
 import * as THREE from 'three'
-import { cameras, MARGE_CADRAGE, ressorts } from '../theme'
+import { cameras, MARGE_CADRAGE_JEU, MARGE_CADRAGE_VITRINE, ressorts } from '../theme'
 import { COTE_PLATEAU } from './interaction'
 import type { PoseCamera } from '../types'
 
@@ -49,7 +49,7 @@ const DIRECTION_ISO = new THREE.Vector3(...cameras.iso.position).normalize()
  * On recule donc selon la **plus contraignante** des deux dimensions.
  */
 function distanceIso(fovDeg: number, aspect: number): number {
-  const demiPlateau = (COTE_PLATEAU * MARGE_CADRAGE) / 2
+  const demiPlateau = (COTE_PLATEAU * MARGE_CADRAGE_VITRINE) / 2
   const demiFov = ((fovDeg / 2) * Math.PI) / 180
   // aspect < 1 en portrait : c'est la largeur qui contraint.
   return demiPlateau / (Math.tan(demiFov) * Math.min(1, aspect))
@@ -76,7 +76,7 @@ export function CameraRig({ pose }: { pose: PoseCamera }) {
    */
   const zoom = Math.min(
     cameras.topDown.zoom,
-    Math.min(taille.width, taille.height) / (COTE_PLATEAU * MARGE_CADRAGE)
+    Math.min(taille.width, taille.height) / (COTE_PLATEAU * MARGE_CADRAGE_JEU)
   )
 
   /** Distance à laquelle la perspective cadre la même hauteur de monde que l'ortho. */

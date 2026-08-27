@@ -119,21 +119,28 @@ export class PiloteUci {
     })
   }
 
-  /**
-   * ⚠️ Le tampon stdout se découpe sur `\n` **à la main** : un seul message peut
-   * contenir plusieurs lignes, ou une ligne coupée en deux.
-   */
+  /** Découpe ce que le worker Stockfish renvoie en lignes UCI exploitables. */
   private recevoir(donnee: unknown): void {
     if (typeof donnee !== 'string') return
-    // On accumule le fragment TEL QUEL. Surtout ne pas compléter par un `\n` :
-    // un message peut être une ligne coupée en deux, et « uci » + « ok » deviendrait
-    // deux lignes cassées au lieu de `uciok`. Ce qui reste après la dernière
-    // coupure demeure dans le tampon jusqu'au fragment suivant.
+
+    // ⚠️ Vérifié dans le navigateur, pas supposé : `stockfish.js` émet **une ligne
+    // complète par message**, sans `\n` final. Un message peut en contenir
+    // plusieurs, alors séparées par `\n`.
+    //
+    // Deux erreurs ont été commises ici avant d'arriver à ça :
+    //   1. compléter chaque message par un `\n` → une ligne arrivée en deux
+    //      morceaux devenait deux lignes cassées ;
+    //   2. n'émettre que sur `\n` → plus aucune ligne n'était jamais émise, et le
+    //      moteur ne démarrait plus du tout.
+    //
+    // On vide donc le tampon à chaque message : ce transport ne coupe pas au
+    // milieu d'une ligne, contrairement à un flux stdout brut (voir la classe
+    // `Engine` de `scripts/engine-profile.mjs`, qui parle à un vrai processus).
     this.tampon += donnee
-    let nl: number
-    while ((nl = this.tampon.indexOf('\n')) !== -1) {
-      const ligne = this.tampon.slice(0, nl).trim()
-      this.tampon = this.tampon.slice(nl + 1)
+    const parties = this.tampon.split('\n')
+    this.tampon = ''
+    for (const brute of parties) {
+      const ligne = brute.trim()
       if (ligne) this.attente?.(ligne)
     }
   }
