@@ -1,0 +1,29 @@
+node_modules/
+dist/
+
+# Stockfish : 7,3 Mo de wasm, récupérés par script. Ne pas versionner un binaire.
+# Pour les remettre :
+#   curl -sLO --output-dir public/engine \
+#     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.js
+#   curl -sLO --output-dir public/engine \
+#     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.wasm
+public/engine/*.wasm
+public/engine/*.js
+
+# Binaire Stockfish desktop (73 Mo d'archive + l'exe), utilisé seulement par les
+# scripts d'analyse hors-ligne. Se retélécharge depuis les releases GitHub officielles.
+tools/
+
+# Archives brutes de l'API Chess.com : régénérables par `npm run fetch`.
+# `data/games.json` et les rapports .md restent versionnés : ce sont les données
+# de référence du projet, et les rapports portent les décisions.
+data/raw/
+data/engine-moves.json
+data/engine-run.log
+
+# Images de révélation : peuvent contenir une adresse de livraison, un numéro de
+# commande, des chiffres de carte. Ne jamais les pousser.
+public/reveal/
+
+.DS_Store
+*.local

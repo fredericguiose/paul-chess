@@ -1,0 +1,38 @@
+{
+  "source": "https://echecs.asso.fr - fiche joueur (capture d'ecran fournie par Frederic, 27/08/2026)",
+  "nomComplet": "AHOUNKENG PONKA Paul Erwan",
+  "titre": null,
+  "classements": {
+    "lent": { "valeur": 1299, "type": "E", "signification": "Estime - devine a partir de son age au moment de l'inscription, sans valeur" },
+    "rapide": { "valeur": 1930, "type": "N", "signification": "National - vrai classement calcule. SEUL CHIFFRE FIABLE." },
+    "blitz": { "valeur": 1540, "type": "E", "signification": "Estime, sans valeur" }
+  },
+  "arbitreNational": "Arbitre Jeune",
+  "initiateur": "Initiation",
+  "animateur": null,
+  "entraineur": null,
+  "affiliation": "Licence A le 02/05/2026",
+  "ficheFide": "existe (lien present sur la fiche FFE, non consulte)",
+  "club": "Kayen Echec Club (Cayenne)",
+  "declarationsDirectes": {
+    "date": "2026-08-27, WhatsApp",
+    "faits": [
+      "Vice-champion academique (Lycee Saint-Joseph, Cayenne) - 2e place",
+      "Numero un en Elo chez les moins de 20 ans en Guyane",
+      "Capitaine de la selection de Guyane",
+      "Pas de titre majeur cette saison, pas champion cette annee",
+      "Initiateur d'echecs, en formation pour etre animateur",
+      "Pic Elo declare : 2100 (non retrouve sur la fiche FFE, a verifier)",
+      "Le compte Chess.com est un compte pedagogique, sabote volontairement au debut"
+    ],
+    "citations": [
+      "Le elo FFE est pas comme le FIDE",
+      "Les classements nationaux sont plus volatils que les classements internationaux",
+      "En Guyane on est pas hyper nombreux et on joue essentiellement entre nous",
+      "Ducoup ca forme un eco systeme, une bulle",
+      "Au debut j'ai fait expres de perdre pour derush",
+      "Je voulais utiliser le compte pour apprendre a jouer a quelqu'un",
+      "C'est estime a partir de mon age quand j'ai commence le 1299"
+    ]
+  }
+}

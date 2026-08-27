@@ -1,0 +1,16 @@
+{
+  "player_id": 447143934,
+  "@id": "https://api.chess.com/pub/player/pedagopaul",
+  "url": "https://www.chess.com/member/pedagopaul",
+  "name": "paul-erwan",
+  "username": "pedagopaul",
+  "followers": 10,
+  "country": "https://api.chess.com/pub/country/GF",
+  "last_online": 1787832805,
+  "joined": 1745514357,
+  "status": "premium",
+  "is_streamer": false,
+  "verified": false,
+  "league": "Champion",
+  "streaming_platforms": []
+}

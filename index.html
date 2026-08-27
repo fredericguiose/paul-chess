@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      Portrait verrouillé, plateau carré centré. `viewport-fit=cover` +
+      `env(safe-area-inset-*)` en CSS pour les encoches.
+      `user-scalable=no` : il désigne des cases au doigt, un zoom accidentel
+      désaligne tout.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#5c3a1d" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Bon anniversaire</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Baloo+2:wght@600;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Le .wasm de Stockfish (7,3 Mo) est préchargé dès le premier octet de HTML :
+      il se télécharge pendant que le joueur lit l'écran d'intro. C'est le seul
+      endroit du parcours où ce téléchargement s'absorbe sans le faire attendre.
+    -->
+    <link
+      rel="prefetch"
+      href="/engine/stockfish-18-lite-single.wasm"
+      as="fetch"
+      type="application/wasm"
+      crossorigin
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

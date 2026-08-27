@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/*
+ * Les valeurs viennent de `src/theme.ts` — seule source de vérité. Ce fichier ne
+ * fait que les exposer à Tailwind. Ne pas ajouter de couleur ici sans l'ajouter
+ * d'abord dans `theme.ts`.
+ */
+@theme {
+  --color-case-claire: #f2dfb8;
+  --color-case-sombre: #b07a42;
+  --color-contour: #3a2313;
+  --color-bois: #8a5a30;
+  --color-bois-sombre: #5c3a1d;
+  --color-lisere: #e8b545;
+  --color-accent: #f5b229;
+  --color-accent-sombre: #c4841a;
+  --color-validation: #5aa02c;
+  --color-bot: #a8402f;
+  --color-texte: #2b1a0d;
+  --color-texte-clair: #fff8ea;
+
+  --font-titre: 'Lilita One', system-ui, sans-serif;
+  --font-corps: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bois-sombre);
+  color: var(--color-texte-clair);
+  font-family: var(--font-corps);
+  /* Encoches et barres système. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Il désigne des cases au doigt : pas de sélection de texte parasite,
+     pas de rebond élastique, pas de surbrillance au tap. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/*
+ * Arrêt bref sur impact — l'équivalent du hit-stop. `arretImpact()` pose cette
+ * classe sur <html> pendant DUREE_ARRET_IMPACT. Ne bloque aucune saisie : seules
+ * les animations se figent.
+ */
+html.juice-arret *,
+html.juice-arret *::before,
+html.juice-arret *::after {
+  animation-play-state: paused !important;
+}
+
+/*
+ * Accessibilité : le jeu se joue devant huit personnes dont on ne connaît pas la
+ * sensibilité aux flashs, écran à 30 cm des yeux.
+ *
+ * ⚠️ On coupe **tremblement et flashs uniquement** — pas les célébrations. Une règle
+ * `*` avec `!important` tuerait aussi le texte de félicitation et l'enfoncement des
+ * boutons, ce qui donnerait un jeu mort au lieu d'un jeu calme. Les effets sensibles
+ * s'annulent en JS (trauma forcé à 0, flash désactivé), pilotés par `mouvementReduit`
+ * dans le store et par cette media query.
+ *
+ * Ce qui reste actif en mouvement réduit : confettis, texte, vibration, enfoncement
+ * des boutons.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /* Uniquement ce qui se déplace ou clignote à grande amplitude. */
+  [data-juice='tremblement'] {
+    transform: none !important;
+  }
+
+  [data-juice='flash'] {
+    display: none !important;
+  }
+
+  /* Les transitions de confort deviennent instantanées, les célébrations restent. */
+  [data-transition='confort'] {
+    transition-duration: 0.01ms !important;
+  }
+}
