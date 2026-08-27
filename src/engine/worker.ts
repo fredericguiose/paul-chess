@@ -125,7 +125,11 @@ export class PiloteUci {
    */
   private recevoir(donnee: unknown): void {
     if (typeof donnee !== 'string') return
-    this.tampon += donnee.endsWith('\n') ? donnee : donnee + '\n'
+    // On accumule le fragment TEL QUEL. Surtout ne pas compléter par un `\n` :
+    // un message peut être une ligne coupée en deux, et « uci » + « ok » deviendrait
+    // deux lignes cassées au lieu de `uciok`. Ce qui reste après la dernière
+    // coupure demeure dans le tampon jusqu'au fragment suivant.
+    this.tampon += donnee
     let nl: number
     while ((nl = this.tampon.indexOf('\n')) !== -1) {
       const ligne = this.tampon.slice(0, nl).trim()

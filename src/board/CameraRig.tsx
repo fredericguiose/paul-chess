@@ -29,13 +29,31 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import { useSpring } from '@react-spring/three'
 import * as THREE from 'three'
-import { cameras, ressorts } from '../theme'
+import { cameras, MARGE_CADRAGE, ressorts } from '../theme'
 import { COTE_PLATEAU } from './interaction'
 import type { PoseCamera } from '../types'
 
 const CIBLE = new THREE.Vector3(0, 0, 0)
 
-const positionIso = new THREE.Vector3(...cameras.iso.position)
+/** Direction du regard en vue 3D, normalisée. La distance est calculée, pas figée. */
+const DIRECTION_ISO = new THREE.Vector3(...cameras.iso.position).normalize()
+
+/**
+ * Distance à laquelle **tout le plateau** tient dans le cadre.
+ *
+ * ⚠️ Le `fov` de three.js est **vertical**. Sur un téléphone en portrait (ratio ~0,5),
+ * le champ horizontal ne fait que la moitié du vertical : une caméra placée pour que
+ * le plateau tienne en hauteur n'en montre que la moitié en largeur. Constaté à
+ * l'écran — on ne voyait que cinq colonnes sur huit.
+ *
+ * On recule donc selon la **plus contraignante** des deux dimensions.
+ */
+function distanceIso(fovDeg: number, aspect: number): number {
+  const demiPlateau = (COTE_PLATEAU * MARGE_CADRAGE) / 2
+  const demiFov = ((fovDeg / 2) * Math.PI) / 180
+  // aspect < 1 en portrait : c'est la largeur qui contraint.
+  return demiPlateau / (Math.tan(demiFov) * Math.min(1, aspect))
+}
 
 export function CameraRig({ pose }: { pose: PoseCamera }) {
   const ortho = useRef<THREE.OrthographicCamera>(null)
@@ -58,7 +76,7 @@ export function CameraRig({ pose }: { pose: PoseCamera }) {
    */
   const zoom = Math.min(
     cameras.topDown.zoom,
-    Math.min(taille.width, taille.height) / COTE_PLATEAU
+    Math.min(taille.width, taille.height) / (COTE_PLATEAU * MARGE_CADRAGE)
   )
 
   /** Distance à laquelle la perspective cadre la même hauteur de monde que l'ortho. */
@@ -67,6 +85,14 @@ export function CameraRig({ pose }: { pose: PoseCamera }) {
 
   const positionRaccord = useRef(new THREE.Vector3())
   positionRaccord.current.set(0, distanceRaccord, 0.001)
+
+  /** Position de la vue 3D, recalculée à chaque changement de format d'écran. */
+  const positionIsoRef = useRef(new THREE.Vector3())
+  positionIsoRef.current
+    .copy(DIRECTION_ISO)
+    .multiplyScalar(
+      distanceIso(cameras.iso.fov ?? 34, taille.width / Math.max(1, taille.height))
+    )
 
   // ── cadrage : frustums et matrices de projection
   useLayoutEffect(() => {
@@ -103,7 +129,7 @@ export function CameraRig({ pose }: { pose: PoseCamera }) {
   const appliquer = (t: number) => {
     const p = persp.current
     if (!p) return
-    p.position.lerpVectors(positionRaccord.current, positionIso, t)
+    p.position.lerpVectors(positionRaccord.current, positionIsoRef.current, t)
     p.lookAt(CIBLE)
     p.updateProjectionMatrix()
   }

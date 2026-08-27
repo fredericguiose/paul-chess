@@ -87,14 +87,23 @@ export const pieces = {
 // ─────────────────────────────────────────────────────────── caméra
 
 /**
- * Deux poses fixes. `topDown` est **orthographique** : le plateau se projette comme
- * un échiquier 2D, sans déformation de perspective. C'est ce qui rend la désignation
- * d'une case précise au doigt.
+ * Deux poses fixes.
+ *
+ * `iso` est la **vue par défaut** : l'échiquier 3D est le cadeau, c'est lui qu'on
+ * montre. `topDown` est **orthographique** — le plateau s'y projette comme un
+ * échiquier 2D, sans déformation de perspective, ce qui rend la désignation d'une
+ * case précise au doigt. On y bascule au toucher du plateau, pour jouer.
  */
 export const cameras = {
-  topDown: { position: [0, 12, 0.001] as const, zoom: 52, fov: undefined },
-  iso: { position: [0, 8.5, 8.5] as const, zoom: undefined, fov: 38 }
+  topDown: { position: [0, 12, 0.001] as const, zoom: 40, fov: undefined },
+  iso: { position: [0, 11, 11] as const, zoom: undefined, fov: 34 }
 } as const
+
+/**
+ * Marge autour du plateau en vue de dessus, en multiples de son côté. Au-delà de 1,
+ * le plateau ne touche plus les bords de l'écran — on respire.
+ */
+export const MARGE_CADRAGE = 1.25
 
 /** Durée de la transition entre les deux poses, en millisecondes. */
 export const DUREE_TRANSITION_CAMERA = 550

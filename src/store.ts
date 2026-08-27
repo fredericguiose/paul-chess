@@ -93,7 +93,9 @@ const etatInitial = {
   historique: [] as CoupJoue[],
   evalBot: 0,
   progression: {} as Record<NumeroCoup, ProgressionEnigme>,
-  poseCamera: 'topDown' as PoseCamera,
+  // L'échiquier 3D est la vue par défaut : c'est le cadeau qu'on montre.
+  // On ne bascule en vue de dessus que pour jouer un coup.
+  poseCamera: 'iso' as PoseCamera,
   selection: null as Case | null,
   mouvementReduit: false,
   sonActif: false

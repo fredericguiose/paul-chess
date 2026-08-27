@@ -16,6 +16,7 @@ import { Outlines } from '@react-three/drei'
 import { couleurs, pieces as geom } from '../theme'
 import { proprietesToon } from './toonMaterial'
 import type { Piece as TypePiece } from '../types'
+import { Blason } from './Blason'
 
 const R = geom.socle.rayon
 const HS = geom.socle.hauteur
@@ -228,6 +229,10 @@ const SILHOUETTES: Record<
 /**
  * La géométrie d'une pièce, posée sur y = 0 et centrée en x/z. Sans position ni
  * animation : `Piece.tsx` s'en charge.
+ *
+ * Le **blason** gravé au sommet n'est pas décoratif : en vue de dessus — la pose de
+ * jeu — une pièce 3D se réduit à un disque et les six types deviennent
+ * indiscernables. Voir `Blason.tsx`.
  */
 export function GeometriePiece({
   piece,
@@ -237,7 +242,12 @@ export function GeometriePiece({
   couleur: string
 }) {
   const Silhouette = SILHOUETTES[piece]
-  return <Silhouette couleur={couleur} />
+  return (
+    <>
+      <Silhouette couleur={couleur} />
+      <Blason piece={piece} hauteur={geom.hauteurs[piece]} sombre={couleur === couleurs.pieceBot} />
+    </>
+  )
 }
 
 /** Hauteur totale d'une pièce, utile pour positionner un surlignage au-dessus. */
