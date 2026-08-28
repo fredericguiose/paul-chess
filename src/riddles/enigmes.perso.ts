@@ -166,23 +166,27 @@ export const ENIGMES_PERSO: EnigmeModele[] = [
     auteur: 'Ibrahim'
   }
 
-  // ⚠️ EN ATTENTE — énigme de Samuel sans réponse fournie.
-  // « Additionne : 1) l'année exacte de notre première rencontre, 2) le nombre
-  //   d'années depuis qu'on se connaît, 3) le numéro de la classe de collège où
-  //   tu as été le plus gros soutien pour moi. »
-  // Il manque LE TOTAL. Sans lui l'énigme est injouable : la validez-vous à quoi ?
-  // Dès que Samuel donne le chiffre, décommenter et le mettre dans `reponses`.
-  //
-  // {
-  //   id: 'perso-addition',
-  //   nature: 'perso',
-  //   type: 'code',
-  //   enonce:
-  //     "Additionne : l'année de notre rencontre + les années depuis qu'on se connaît + le numéro de ma classe de collège.",
-  //   reponses: ['????'],
-  //   indices: ['Trois nombres à additionner.', 'Le premier est une année.'],
-  //   auteur: 'Samuel'
-  // }
+  ,
+  {
+    id: 'perso-addition',
+    nature: 'perso',
+    type: 'code',
+    enonce:
+      'Additionne : l’année scolaire de notre rencontre + le nombre d’années qu’on se connaît + le numéro de ma classe de collège où tu as été mon plus gros soutien.',
+    // Les trois nombres donnés par Samuel : 2021 (il a précisé « année scolaire »,
+    // d’où la formulation), 6 ans, et 4 pour la 4ᵉ. Total 2031.
+    //
+    // ⚠️ Le piège est le 6. De 2021 à 2026 on compte facilement 5, et le champ
+    // `code` valide au chiffre exact : c’est le deuxième indice qui lève
+    // l’ambiguïté, pas une réponse alternative. Accepter 2030 rendrait l’énigme
+    // fausse.
+    reponses: ['2031'],
+    indices: [
+      'Une année scolaire, un nombre d’années, un numéro de classe de collège.',
+      'L’année scolaire, c’est 2021, et ça fait 6 ans qu’on se connaît.'
+    ],
+    auteur: 'Samuel'
+  }
 
   // ▲▲▲ ────────────────────────────────────────────────────────── ▲▲▲
 ]
