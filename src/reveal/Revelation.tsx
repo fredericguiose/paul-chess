@@ -1,7 +1,10 @@
 /**
  * La révélation — la fin du jeu, et sa raison d'être.
  *
- * Le bot a abandonné après le 15ᵉ coup. Tout ce qui précède existe pour amener ici.
+ * La partie est terminée. Tout ce qui précède existe pour amener ici.
+ *
+ * Le bot joue pour l'équilibre et **peut gagner** : l'issue est réelle. Seule la
+ * phrase d'accueil change — le cadeau se dévoile dans tous les cas.
  *
  * Deux battements : le grand chiffre de l'âge, puis le cadeau. Le cadeau n'arrive
  * qu'en **octobre**, donc on ne montre pas une photo ni un reçu : on montre un
@@ -36,11 +39,25 @@ export function Revelation() {
 }
 
 /**
+ * Ce qui s'affiche au-dessus du grand chiffre, selon l'issue.
+ *
+ * Le bot joue pour l'équilibre depuis qu'il a été mesuré en train de rendre la
+ * partie coup après coup. Il **peut donc gagner** — et dans ce cas on ne fait pas
+ * semblant : on le dit, et le cadeau se dévoile quand même.
+ */
+const ACCUEIL: Record<'victoire' | 'nulle' | 'defaite', string> = {
+  victoire: 'Tu as gagné.',
+  nulle: 'Match nul. Vous vous êtes rendu coup pour coup.',
+  defaite: "Bon. C'était pas prévu que tu perdes."
+}
+
+/**
  * Le grand chiffre, seul à l'écran, sur les confettis lancés à l'entrée. C'est le
- * battement entre « le bot abandonne » et le cadeau : il ne faut rien d'autre dessus.
+ * battement entre la fin de la partie et le cadeau : rien d'autre ne doit s'y trouver.
  */
 function Age({ onSuite }: { onSuite: () => void }) {
   const [pret, setPret] = useState(false)
+  const issue = useJeu((s) => s.issue())
 
   // Le bouton n'apparaît qu'après quelques secondes : sinon on traverse le moment
   // sans le voir, et c'est tout son intérêt.
@@ -51,7 +68,7 @@ function Age({ onSuite }: { onSuite: () => void }) {
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-      <p className="font-titre text-2xl text-accent">Tu as gagné.</p>
+      <p className="max-w-sm font-titre text-2xl text-accent">{ACCUEIL[issue]}</p>
 
       <p
         className="font-titre leading-none text-lisere drop-shadow-[0_6px_0_rgba(58,35,19,0.85)]"
@@ -105,6 +122,7 @@ function calculerReste(cible: Date): Reste {
  */
 function Cadeau() {
   const [reste, setReste] = useState(() => calculerReste(DATE_CADEAU))
+  const issue = useJeu((s) => s.issue())
   const historique = useJeu((s) => s.historique)
   const progression = useJeu((s) => s.progression)
 
@@ -127,7 +145,9 @@ function Cadeau() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-8 text-center">
       <div className="flex flex-col gap-1">
-        <p className="font-titre text-xl text-accent">Ton cadeau</p>
+        <p className="font-titre text-xl text-accent">
+          {issue === 'defaite' ? "…mais tu as quand même reçu" : 'Ton cadeau'}
+        </p>
         <h1 className="font-titre text-4xl leading-tight text-lisere">{NOM_CADEAU}</h1>
       </div>
 
@@ -151,8 +171,9 @@ function Cadeau() {
       {/* Des objectifs, jamais des conditions. Ratés, ils ne coûtent rien. */}
       <div className="mt-2 flex flex-col gap-1 text-sm text-texte-clair/70">
         <span>
-          Gagné en <strong className="text-lisere">{coups} coups</strong>
-          {coups <= NOMBRE_DE_COUPS && ' — dans les temps'}
+          {issue === 'defaite' ? 'Partie de ' : 'Gagné en '}
+          <strong className="text-lisere">{coups} coups</strong>
+          {issue !== 'defaite' && coups <= NOMBRE_DE_COUPS && ' — dans les temps'}
         </span>
         {sansIndice > 0 && (
           <span>

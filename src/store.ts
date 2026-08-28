@@ -61,6 +61,12 @@ interface EtatJeu {
    * Voir `paul-chess-engine`.
    */
   botPeutAbandonner: () => boolean
+  /**
+   * L'issue de la partie, du point de vue du joueur. Le bot joue désormais pour
+   * l'équilibre et **peut gagner** : seule la phrase d'accueil de la révélation
+   * change, le cadeau se dévoile dans tous les cas.
+   */
+  issue: () => 'victoire' | 'nulle' | 'defaite'
 
   // ── actions
   setPhase: (phase: PhaseJeu) => void
@@ -127,6 +133,14 @@ export const useJeu = create<EtatJeu>()(
           coupsJoueur >= REGLES_BOT.abandonApresCoup &&
           evalBot < REGLES_BOT.abandonSeuilEval
         )
+      },
+
+      issue: () => {
+        const { evalBot } = get()
+        // `evalBot` est du point de vue du bot : négatif = le joueur mène.
+        if (evalBot <= -150) return 'victoire'
+        if (evalBot >= 150) return 'defaite'
+        return 'nulle'
       },
 
       // ── actions

@@ -200,11 +200,31 @@ export interface EvaluationBot {
  * trois fois. Détail et historique dans le skill `paul-chess-engine`.
  */
 export const REGLES_BOT = {
+  /**
+   * ⚠️ **Le bot joue pour l'équilibre, il ne se saborde plus.**
+   *
+   * Mesuré au moteur sur une vraie partie de test : l'ancien réglage forçait le bot
+   * à rester sous −200 pendant douze coups. Résultat, il rendait la partie à chaque
+   * coup — et au 20ᵉ il a laissé passer un **mat forcé** qu'il avait. Contre un
+   * joueur à 1930, ça se voit à la première seconde.
+   *
+   * Il cherche donc désormais, parmi les candidats MultiPV, le coup dont
+   * l'évaluation est la plus proche de zéro. Ni gagner, ni perdre : jouer.
+   * L'issue devient réelle — et **le joueur peut perdre**, c'est assumé, seul le
+   * message final change.
+   */
+  bandeEquilibre: 120 as Centipions,
   /** Fenêtre d'évaluation visée par la faute volontaire du bot. */
   fauteCible: { min: -500 as Centipions, max: -300 as Centipions },
-  /** Coups entre lesquels la faute doit tomber. */
-  fauteEntreCoups: { debut: 6 as NumeroCoup, fin: 8 as NumeroCoup },
-  /** Le bot ne joue jamais un coup qui le ferait remonter au-dessus de ce seuil. */
+  /**
+   * Coups entre lesquels la faute doit tomber. Placée **tard** : avant, elle tombait
+   * au 6ᵉ-8ᵉ coup et le bot passait les douze coups suivants à jouer n'importe quoi.
+   */
+  fauteEntreCoups: { debut: 16 as NumeroCoup, fin: 18 as NumeroCoup },
+  /**
+   * Le bot ne joue jamais un coup qui le ferait remonter au-dessus de ce seuil —
+   * **uniquement après la faute**, donc sur les deux ou trois derniers coups.
+   */
   plafondGardeFou: -200 as Centipions,
   /**
    * ⚠️ L'abandon est verrouillé sur le **temps**, pas sur l'évaluation.

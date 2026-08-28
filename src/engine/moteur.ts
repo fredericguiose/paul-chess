@@ -24,6 +24,7 @@ import {
   planifierFaute
 } from './faute'
 import { coupSousPlafond, gardeFouActif } from './gardeFou'
+import { choisirEquilibre } from './equilibre'
 
 export type EtatMoteur = EtatPilote
 
@@ -214,21 +215,28 @@ export async function demanderCoupBot(ctx: ContexteCoup): Promise<DecisionBot | 
   const plafond = gardeFouActif(ctx.evalBot)
 
   try {
-    // 4. Jeu libre : une seule recherche, MultiPV 1.
+    // 4. Équilibre : tant que la faute n'a pas eu lieu, le bot vise zéro.
+    //
+    // ⚠️ Remplace l'ancien « jeu libre à pleine force ». Mesuré au moteur : à pleine
+    // force le bot gagnait, et le garde-fou le forçait ensuite à tout rendre coup
+    // après coup — jusqu'à laisser passer un mat forcé au 20e. Viser l'équilibre
+    // donne une vraie partie, et l'issue redevient sincère.
     if (!faute && !plafond) {
-      const { cp, best } = await pilote.evaluate(ctx.fen)
-      const san = best ? uciVersSan(ctx.fen, best) : null
-      if (san && best) {
+      const demandeEq = Math.min(legaux.length, MULTIPV_MAX)
+      const cands = await pilote.evaluerCandidats(ctx.fen, demandeEq)
+      const choix = choisirEquilibre(cands)
+      const sanEq = choix ? uciVersSan(ctx.fen, choix.uci) : null
+      if (sanEq && choix) {
         return finir({
-          san,
-          uci: best,
-          cp,
+          san: sanEq,
+          uci: choix.uci,
+          cp: choix.cp,
           source: 'libre',
           estLaFaute: false,
           moteurInterroge: true
         })
       }
-      throw new Error('aucun coup exploitable en jeu libre')
+      throw new Error('aucun coup exploitable en équilibre')
     }
 
     // 2 et 3 ont besoin de candidats classés.
