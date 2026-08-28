@@ -45,6 +45,118 @@ import type { EnigmeModele } from './grille'
 
 export const ENIGMES_PERSO: EnigmeModele[] = [
   // ▼▼▼ ÉCRIVEZ VOS ÉNIGMES ICI — la première sera jouée en dernier ▼▼▼
+
+  // ── de Samuel ───────────────────────────────────────────────────────────
+  {
+    id: 'perso-hamster',
+    nature: 'perso',
+    type: 'text',
+    enonce:
+      "À quel animal tu ressemblais sur la photo que j'ai prise de toi chez Mathys ?",
+    reponses: ['hamster', 'un hamster', 'hamsters'],
+    indices: ['Ça nous a tous fait marrer. Moi le premier.', 'Petit, les joues pleines.'],
+    auteur: 'Samuel'
+  },
+  {
+    id: 'perso-ordi-cdi',
+    nature: 'perso',
+    type: 'choice',
+    enonce:
+      "Juste après notre première rencontre, on a failli avoir de gros problèmes à cause de moi. C'était quoi ?",
+    choix: [
+      "Tu utilisais mon téléphone et tu t'es fait choper par M. Richard",
+      "J'ai tapé n'importe quoi sur l'ordi du CDI"
+    ],
+    bonneReponse: 1,
+    indices: ['Ce n’était pas un téléphone.', 'Un ordinateur, au CDI.'],
+    auteur: 'Samuel'
+  },
+
+  // ── d'Ibrahim ───────────────────────────────────────────────────────────
+  {
+    id: 'perso-senegal',
+    nature: 'perso',
+    type: 'choice',
+    enonce: 'À qui ça correspond : « SENEGAAAAAL » ?',
+    choix: ['Gilles', 'Yann', 'Ibrahim'],
+    bonneReponse: 2,
+    indices: ['Il crie ça souvent.', "C'est celui qui a écrit cette énigme."],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-reveil',
+    nature: 'perso',
+    type: 'text',
+    enonce: 'Votre première interaction avec Ibrahim, c’était quoi ?',
+    reponses: ['le reveiller en cours', 'le reveiller', 'reveiller en cours', 'le réveiller'],
+    indices: ['Ça se passait en cours.', 'Il dormait.'],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-rachel',
+    nature: 'perso',
+    type: 'text',
+    enonce:
+      "Le groupe aux 1000 péripéties qui t'a suivi sur Insta, Discord et WhatsApp en première : son nom ?",
+    reponses: ['rachel'],
+    indices: ['Un prénom.', 'Un prénom de fille.'],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-ffjm',
+    nature: 'perso',
+    type: 'text',
+    enonce: 'Le nom du concours de maths que tu as fait en début d’année ?',
+    reponses: ['ffjm', 'f.f.j.m', 'federation francaise des jeux mathematiques'],
+    indices: ['Quatre lettres.', 'Ça commence par FF.'],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-sticker',
+    nature: 'perso',
+    type: 'text',
+    enonce: "Le sticker d'Ibrahim que tu détestes le plus ?",
+    reponses: ['couillon', 'le couillon'],
+    indices: ['Il te l’envoie exprès.', 'Ça commence par C.'],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-jean-moise',
+    nature: 'perso',
+    type: 'text',
+    enonce: "L'un des plus grands échecs de la carrière d'Ibrahim ?",
+    reponses: ['jean moise', 'jean-moise', 'jean moïse'],
+    indices: ['Un nom et un prénom.', 'Jean quelque chose.'],
+    auteur: 'Ibrahim'
+  },
+  {
+    id: 'perso-ifas',
+    nature: 'perso',
+    type: 'text',
+    enonce: 'Lieu de départ habituel de la Délégation ?',
+    reponses: ['ifas', 'l ifas'],
+    indices: ['Quatre lettres.', 'Ça commence par I.'],
+    auteur: 'Ibrahim'
+  }
+
+  // ⚠️ EN ATTENTE — énigme de Samuel sans réponse fournie.
+  // « Additionne : 1) l'année exacte de notre première rencontre, 2) le nombre
+  //   d'années depuis qu'on se connaît, 3) le numéro de la classe de collège où
+  //   tu as été le plus gros soutien pour moi. »
+  // Il manque LE TOTAL. Sans lui l'énigme est injouable : la validez-vous à quoi ?
+  // Dès que Samuel donne le chiffre, décommenter et le mettre dans `reponses`.
+  //
+  // {
+  //   id: 'perso-addition',
+  //   nature: 'perso',
+  //   type: 'code',
+  //   enonce:
+  //     "Additionne : l'année de notre rencontre + les années depuis qu'on se connaît + le numéro de ma classe de collège.",
+  //   reponses: ['????'],
+  //   indices: ['Trois nombres à additionner.', 'Le premier est une année.'],
+  //   auteur: 'Samuel'
+  // }
+
   // ▲▲▲ ────────────────────────────────────────────────────────── ▲▲▲
 ]
 

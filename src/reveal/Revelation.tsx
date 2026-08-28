@@ -43,7 +43,12 @@ export const CADEAUX: Cadeau[] = [
   // ▲▲▲ ─────────────────────── ▲▲▲
 ]
 
+/** L'âge qu'il a aujourd'hui. Le chiffre du jour. */
+export const AGE = 17
+
 export function Revelation() {
+  /** `age` : le grand chiffre. `cadeaux` : ce qui vient après. */
+  const [etape, setEtape] = useState<'age' | 'cadeaux'>('age')
   const [index, setIndex] = useState(0)
   const historique = useJeu((s) => s.historique)
   const progression = useJeu((s) => s.progression)
@@ -53,8 +58,10 @@ export function Revelation() {
 
   // Le grand feu d'artifice, une seule fois, à l'entrée.
   useEffect(() => {
-    feedback('finale', { texte: 'GAGNÉ !!!' })
+    feedback('finale', { texte: `${AGE} ANS !!!` })
   }, [])
+
+  if (etape === 'age') return <Age onSuite={() => setEtape('cadeaux')} />
 
   const coups = historique.filter((c) => c.camp === 'blancs').length
   const sansIndice = Object.values(progression).filter(
@@ -117,6 +124,43 @@ export function Revelation() {
           Il y a autre chose…
         </Bouton>
       )}
+    </div>
+  )
+}
+
+/**
+ * Le grand chiffre, seul à l'écran, sur les confettis lancés à l'entrée de la
+ * révélation. C'est le battement entre « le bot abandonne » et le cadeau : il ne
+ * faut rien d'autre dessus.
+ */
+function Age({ onSuite }: { onSuite: () => void }) {
+  const [pret, setPret] = useState(false)
+
+  // Le bouton n'apparaît qu'après quelques secondes : sinon on passe à travers le
+  // moment sans le voir, et c'est tout l'intérêt de cet écran.
+  useEffect(() => {
+    const t = setTimeout(() => setPret(true), 2600)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+      <p className="font-titre text-2xl text-accent">Tu as gagné.</p>
+
+      <p
+        className="font-titre leading-none text-lisere drop-shadow-[0_6px_0_rgba(58,35,19,0.85)]"
+        style={{ fontSize: 'min(44vw, 34vh)' }}
+      >
+        {AGE}
+      </p>
+
+      <p className="font-titre text-3xl text-texte-clair">ans</p>
+
+      <div className={`mt-6 w-full max-w-sm transition-opacity duration-700 ${pret ? 'opacity-100' : 'opacity-0'}`}>
+        <Bouton taille="lg" pleineLargeur onClick={onSuite} disabled={!pret}>
+          Et ce n'est pas tout…
+        </Bouton>
+      </div>
     </div>
   )
 }
