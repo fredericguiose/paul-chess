@@ -27,16 +27,63 @@ export const DATE_CADEAU = new Date('2026-10-10T00:00:00')
 export const NOM_CADEAU = 'Ton échiquier'
 
 export function Revelation() {
-  /** `age` : le grand chiffre. `cadeau` : le compte à rebours. */
-  const [etape, setEtape] = useState<'age' | 'cadeau'>('age')
+  /** `age` : le grand chiffre. `blague` : la fausse peur. `cadeau` : le compte à rebours. */
+  const [etape, setEtape] = useState<'age' | 'blague' | 'cadeau'>('age')
+  const issue = useJeu((s) => s.issue())
 
   // Le grand feu d'artifice, une seule fois, à l'entrée.
   useEffect(() => {
     feedback('finale', { texte: `${AGE} ANS !!!` })
   }, [])
 
-  if (etape === 'age') return <Age onSuite={() => setEtape('cadeau')} />
+  if (etape === 'age') {
+    // La fausse peur n'a de sens que s'il a vraiment perdu.
+    return <Age onSuite={() => setEtape(issue === 'defaite' ? 'blague' : 'cadeau')} />
+  }
+  if (etape === 'blague') return <Blague onSuite={() => setEtape('cadeau')} />
   return <Cadeau />
+}
+
+/**
+ * La blague, en cas de défaite : on lui annonce qu'il n'a pas de cadeau, puis on
+ * se dédit.
+ *
+ * ⚠️ **Elle enchaîne toute seule.** Aucun bouton pour en sortir : devant huit
+ * personnes, laisser quelqu'un cliquer sur « pas de cadeau » transformerait le gag
+ * en malaise. Deux secondes et demie, c'est le temps d'un « quoi ?! » collectif —
+ * au-delà ce n'est plus drôle.
+ */
+function Blague({ onSuite }: { onSuite: () => void }) {
+  const [dedit, setDedit] = useState(false)
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setDedit(true), 2500)
+    const t2 = setTimeout(onSuite, 4600)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [onSuite])
+
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-6 px-6 text-center">
+      <p
+        className={`font-titre text-4xl leading-tight transition-all duration-500 ${
+          dedit ? 'scale-90 text-texte-clair/40 line-through' : 'text-bot'
+        }`}
+      >
+        Du coup, pas de cadeau.
+      </p>
+
+      <p
+        className={`font-titre text-3xl text-lisere transition-opacity duration-700 ${
+          dedit ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        Mais si, évidemment.
+      </p>
+    </div>
+  )
 }
 
 /**
