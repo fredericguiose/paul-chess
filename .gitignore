@@ -21,9 +21,6 @@ data/raw/
 data/engine-moves.json
 data/engine-run.log
 
-# Images de révélation : peuvent contenir une adresse de livraison, un numéro de
-# commande, des chiffres de carte. Ne jamais les pousser.
-public/reveal/
 
 .DS_Store
 *.local

@@ -3,13 +3,9 @@
  *
  * Le bot a abandonné après le 15ᵉ coup. Tout ce qui précède existe pour amener ici.
  *
- * **Les images sont interchangeables** : le cadeau n'était pas encore commandé au
- * moment d'écrire ce composant. On commence par un reçu recadré, on remplace par une
- * photo du plateau quand il arrive — sans toucher au code. Plusieurs images sont
- * possibles : les autres participants n'avaient pas encore confirmé leurs cadeaux.
- *
- * ⚠️ Un reçu contient une adresse de livraison, un numéro de commande, parfois des
- * chiffres de carte. **Recadrer avant de déposer le fichier** : le site est en ligne.
+ * Deux battements : le grand chiffre de l'âge, puis le cadeau. Le cadeau n'arrive
+ * qu'en **octobre**, donc on ne montre pas une photo ni un reçu : on montre un
+ * **compte à rebours** qui tourne. C'est la promesse, pas l'objet.
  */
 
 import { useEffect, useState } from 'react'
@@ -18,87 +14,141 @@ import { Bouton } from '../juice/Bouton'
 import { feedback } from '../juice/feedback'
 import { NOMBRE_DE_COUPS } from '../types'
 
-/**
- * Les cadeaux à dévoiler, dans l'ordre. Déposer les fichiers dans `public/reveal/`
- * et ajouter une entrée ici — c'est le seul changement nécessaire.
- */
-export interface Cadeau {
-  /** Chemin depuis `public/`, par exemple `/reveal/echiquier.jpg`. */
-  image?: string
-  titre: string
-  texte?: string
-  /** Qui offre. Affiché discrètement sous le texte. */
-  de?: string
-}
-
-export const CADEAUX: Cadeau[] = [
-  {
-    titre: 'Joyeux anniversaire',
-    texte:
-      "Cette partie, tu viens de la gagner. Le cadeau, lui, t'attend depuis un moment.",
-    de: undefined
-  }
-  // ▼▼▼ AJOUTER LES CADEAUX ICI ▼▼▼
-  // { image: '/reveal/recu.jpg', titre: 'Ton échiquier', texte: '…', de: 'Frédéric' },
-  // ▲▲▲ ─────────────────────── ▲▲▲
-]
-
 /** L'âge qu'il a aujourd'hui. Le chiffre du jour. */
 export const AGE = 17
 
-export function Revelation() {
-  /** `age` : le grand chiffre. `cadeaux` : ce qui vient après. */
-  const [etape, setEtape] = useState<'age' | 'cadeaux'>('age')
-  const [index, setIndex] = useState(0)
-  const historique = useJeu((s) => s.historique)
-  const progression = useJeu((s) => s.progression)
+/** Le jour où l'échiquier arrive. Modifier ici si la date bouge. */
+export const DATE_CADEAU = new Date('2026-10-10T00:00:00')
 
-  const cadeau = CADEAUX[index]
-  const dernier = index >= CADEAUX.length - 1
+export const NOM_CADEAU = 'Ton échiquier'
+
+export function Revelation() {
+  /** `age` : le grand chiffre. `cadeau` : le compte à rebours. */
+  const [etape, setEtape] = useState<'age' | 'cadeau'>('age')
 
   // Le grand feu d'artifice, une seule fois, à l'entrée.
   useEffect(() => {
     feedback('finale', { texte: `${AGE} ANS !!!` })
   }, [])
 
-  if (etape === 'age') return <Age onSuite={() => setEtape('cadeaux')} />
+  if (etape === 'age') return <Age onSuite={() => setEtape('cadeau')} />
+  return <Cadeau />
+}
+
+/**
+ * Le grand chiffre, seul à l'écran, sur les confettis lancés à l'entrée. C'est le
+ * battement entre « le bot abandonne » et le cadeau : il ne faut rien d'autre dessus.
+ */
+function Age({ onSuite }: { onSuite: () => void }) {
+  const [pret, setPret] = useState(false)
+
+  // Le bouton n'apparaît qu'après quelques secondes : sinon on traverse le moment
+  // sans le voir, et c'est tout son intérêt.
+  useEffect(() => {
+    const t = setTimeout(() => setPret(true), 2600)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+      <p className="font-titre text-2xl text-accent">Tu as gagné.</p>
+
+      <p
+        className="font-titre leading-none text-lisere drop-shadow-[0_6px_0_rgba(58,35,19,0.85)]"
+        style={{ fontSize: 'min(44vw, 32vh)' }}
+      >
+        {AGE}
+      </p>
+
+      <p className="font-titre text-3xl text-texte-clair">ans</p>
+
+      <div
+        className={`mt-8 w-full max-w-sm transition-opacity duration-700 ${
+          pret ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <Bouton taille="lg" pleineLargeur onClick={onSuite} disabled={!pret}>
+          Et ce n'est pas tout…
+        </Bouton>
+      </div>
+    </div>
+  )
+}
+
+interface Reste {
+  jours: number
+  heures: number
+  minutes: number
+  secondes: number
+  arrive: boolean
+}
+
+function calculerReste(cible: Date): Reste {
+  const ms = cible.getTime() - Date.now()
+  if (ms <= 0) return { jours: 0, heures: 0, minutes: 0, secondes: 0, arrive: true }
+  const s = Math.floor(ms / 1000)
+  return {
+    jours: Math.floor(s / 86400),
+    heures: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    secondes: s % 60,
+    arrive: false
+  }
+}
+
+/**
+ * Le cadeau : un compte à rebours vivant, pas une image.
+ *
+ * Il ne reçoit l'échiquier qu'en octobre. Montrer une photo ou un reçu aujourd'hui
+ * serait montrer un objet qu'il n'a pas ; un compteur qui tourne montre l'attente,
+ * et il peut revenir le regarder.
+ */
+function Cadeau() {
+  const [reste, setReste] = useState(() => calculerReste(DATE_CADEAU))
+  const historique = useJeu((s) => s.historique)
+  const progression = useJeu((s) => s.progression)
+
+  useEffect(() => {
+    const t = setInterval(() => setReste(calculerReste(DATE_CADEAU)), 1000)
+    return () => clearInterval(t)
+  }, [])
 
   const coups = historique.filter((c) => c.camp === 'blancs').length
   const sansIndice = Object.values(progression).filter(
     (p) => p.resolue && p.indicesReveles === 0
   ).length
 
+  const dateLisible = DATE_CADEAU.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
   return (
-    <div className="relative flex h-full flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-10 text-center">
-      <p className="font-titre text-xl text-accent">Le bot abandonne.</p>
+    <div className="flex h-full flex-col items-center justify-center gap-6 overflow-y-auto px-6 py-8 text-center">
+      <div className="flex flex-col gap-1">
+        <p className="font-titre text-xl text-accent">Ton cadeau</p>
+        <h1 className="font-titre text-4xl leading-tight text-lisere">{NOM_CADEAU}</h1>
+      </div>
 
-      <h1 className="font-titre text-4xl leading-tight text-lisere">{cadeau.titre}</h1>
-
-      {cadeau.image ? (
-        <img
-          src={cadeau.image}
-          alt={cadeau.titre}
-          className="max-h-[45vh] w-full max-w-sm rounded-2xl border-4 border-lisere object-contain shadow-[0_10px_0_rgba(58,35,19,0.6)]"
-        />
+      {reste.arrive ? (
+        <p className="font-titre text-3xl text-lisere">Il est là. 🎁</p>
       ) : (
-        // Aucune image déposée : on ne montre pas un cadre vide, on l'assume.
-        <div className="flex w-full max-w-sm flex-col items-center gap-2 rounded-2xl border-4 border-dashed border-lisere/50 px-6 py-10 text-texte-clair/60">
-          <span className="text-5xl">🎁</span>
-          <span className="text-sm">
-            (l'image du cadeau se dépose dans <code>public/reveal/</code>)
-          </span>
-        </div>
+        <>
+          <p className="text-lg text-texte-clair">Il arrive dans</p>
+
+          <div className="flex items-start justify-center gap-2">
+            <Case valeur={reste.jours} libelle="jours" grand />
+            <Case valeur={reste.heures} libelle="h" />
+            <Case valeur={reste.minutes} libelle="min" />
+            <Case valeur={reste.secondes} libelle="s" />
+          </div>
+
+          <p className="text-base text-texte-clair/70">le {dateLisible}</p>
+        </>
       )}
 
-      {cadeau.texte && (
-        <p className="max-w-sm text-lg leading-snug text-texte-clair">{cadeau.texte}</p>
-      )}
-
-      {cadeau.de && (
-        <p className="text-base text-texte-clair/70">de la part de {cadeau.de}</p>
-      )}
-
-      {/* Le score : des objectifs, jamais des conditions. Ratés, ils ne coûtent rien. */}
+      {/* Des objectifs, jamais des conditions. Ratés, ils ne coûtent rien. */}
       <div className="mt-2 flex flex-col gap-1 text-sm text-texte-clair/70">
         <span>
           Gagné en <strong className="text-lisere">{coups} coups</strong>
@@ -111,56 +161,30 @@ export function Revelation() {
           </span>
         )}
       </div>
-
-      {!dernier && (
-        <Bouton
-          taille="lg"
-          pleineLargeur
-          onClick={() => {
-            setIndex((i) => i + 1)
-            feedback('grand')
-          }}
-        >
-          Il y a autre chose…
-        </Bouton>
-      )}
     </div>
   )
 }
 
-/**
- * Le grand chiffre, seul à l'écran, sur les confettis lancés à l'entrée de la
- * révélation. C'est le battement entre « le bot abandonne » et le cadeau : il ne
- * faut rien d'autre dessus.
- */
-function Age({ onSuite }: { onSuite: () => void }) {
-  const [pret, setPret] = useState(false)
-
-  // Le bouton n'apparaît qu'après quelques secondes : sinon on passe à travers le
-  // moment sans le voir, et c'est tout l'intérêt de cet écran.
-  useEffect(() => {
-    const t = setTimeout(() => setPret(true), 2600)
-    return () => clearTimeout(t)
-  }, [])
-
+/** Une case du compte à rebours : le nombre en gros, son unité dessous. */
+function Case({
+  valeur,
+  libelle,
+  grand = false
+}: {
+  valeur: number
+  libelle: string
+  grand?: boolean
+}) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-titre text-2xl text-accent">Tu as gagné.</p>
-
-      <p
-        className="font-titre leading-none text-lisere drop-shadow-[0_6px_0_rgba(58,35,19,0.85)]"
-        style={{ fontSize: 'min(44vw, 34vh)' }}
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className={`rounded-2xl border-2 border-lisere/70 bg-bois px-3 py-2 font-titre tabular-nums text-texte-clair shadow-[0_5px_0_rgba(58,35,19,0.6)] ${
+          grand ? 'text-5xl' : 'text-3xl'
+        }`}
       >
-        {AGE}
-      </p>
-
-      <p className="font-titre text-3xl text-texte-clair">ans</p>
-
-      <div className={`mt-6 w-full max-w-sm transition-opacity duration-700 ${pret ? 'opacity-100' : 'opacity-0'}`}>
-        <Bouton taille="lg" pleineLargeur onClick={onSuite} disabled={!pret}>
-          Et ce n'est pas tout…
-        </Bouton>
+        {grand ? valeur : String(valeur).padStart(2, '0')}
       </div>
+      <span className="text-xs text-texte-clair/70">{libelle}</span>
     </div>
   )
 }
