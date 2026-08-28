@@ -107,7 +107,20 @@ export function BandeEnigme({
   }
 
   // ── états repliés : la bande ne disparaît jamais, sinon la page saute.
-  if (!enigme) return <Bande>{null}</Bande>
+  //
+  // ⚠️ Ne JAMAIS rendre une carte vide. Quand la grille n'a plus d'énigme pour ce
+  // coup — parce que la partie a dépassé les 15 —, l'écran affichait un cadre brun
+  // vide et plus rien ne se passait, pile au moment du cadeau. L'orchestration a un
+  // filet qui révèle passé 15 énigmes ; ceci est la seconde ceinture, côté rendu.
+  if (!enigme) {
+    return (
+      <Bande>
+        <p className="py-3 text-center font-titre text-xl text-lisere">
+          Tu les as toutes eues.
+        </p>
+      </Bande>
+    )
+  }
 
   if (!active) {
     return (

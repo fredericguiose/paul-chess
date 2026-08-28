@@ -7,6 +7,7 @@ import { BandeEnigme } from './riddles/BandeEnigme'
 import { CoucheJuice } from './juice/CoucheJuice'
 import { useTremblement } from './juice/useTremblement'
 import { Bouton } from './juice/Bouton'
+import { Revelation } from './reveal/Revelation'
 import { demarrerMoteur, nouvellePartie } from './engine/moteur'
 import { apresCoupDuBot, jouerCoupJoueur, tourDuBot } from './orchestration'
 import { DUREE_COUP } from './theme'
@@ -85,6 +86,9 @@ export function App() {
   }, [])
 
   if (phase === 'intro') return <Intro />
+  // La fin du jeu. Sans ce cas, la partie terminée affichait une carte d'énigme vide
+  // et plus rien ne se passait — le jeu n'avait pas de fin.
+  if (phase === 'revelation') return <Revelation />
 
   const carteVisible = phase === 'enigme'
   const Plateau = PLATEAU_3D ? Board3D : PlateauSecours

@@ -25,6 +25,7 @@
  */
 
 import type { EnigmeModele } from './grille'
+import { ENIGMES_POSITION } from './enigmes.positions'
 
 /**
  * L'énigme du **slot 7**, le point de couplage du projet. Elle ne se remplace
@@ -39,7 +40,7 @@ export const ENIGME_COUPLAGE: EnigmeModele = {
   id: 'echecs-prise-live',
   nature: 'echecs',
   type: 'square-live',
-  enonce: 'Le bot vient de laisser une pièce en prise. Touche sa case sur le plateau.',
+  enonce: 'Le bot vient de laisser une pièce en prise. Touche sa case sur le diagramme.',
   indices: [
     'Regarde ce qui vient de bouger : la pièce n’est plus défendue.',
     'Compte les attaquants et les défenseurs de la case. Un contre zéro.'
@@ -53,6 +54,15 @@ export const ENIGME_COUPLAGE: EnigmeModele = {
  * évidentes pour lui) ; les suivantes comblent, en montant depuis le slot 4, ce que
  * le groupe n'a pas livré.
  */
+/**
+ * Les deux positions d'ouverture du lot à diagramme : les plus tranchées des
+ * quarante générées. Elles remplacent les anciennes énigmes à case
+ * (`square-puzzle`), où il désignait une case unique sur une position choisie pour
+ * que le départ soit implicite. Voir `enigmes.positions.ts` pour ce que cette
+ * astuce coûtait.
+ */
+const [POSITION_FACILE_1, POSITION_FACILE_2] = ENIGMES_POSITION
+
 export const ENIGMES_ECHECS: EnigmeModele[] = [
   {
     id: 'echecs-e4',
@@ -104,15 +114,7 @@ export const ENIGMES_ECHECS: EnigmeModele[] = [
     reponses: ['8'],
     indices: ['Compte les sauts en L, dans toutes les directions.', 'Entre 6 et 9.']
   },
-  {
-    id: 'echecs-puzzle-scotch',
-    nature: 'echecs',
-    type: 'square-puzzle',
-    enonce: 'Ton Écossaise, après 3.d4. Touche la case où les noirs prennent le pion.',
-    fenPuzzle: 'r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq - 0 3',
-    caseAttendue: 'd4',
-    indices: ['C’est le pion e5 qui prend.', 'Une case de la colonne d.']
-  },
+  POSITION_FACILE_1,
   {
     id: 'echecs-capitaine',
     nature: 'echecs',
@@ -121,18 +123,7 @@ export const ENIGMES_ECHECS: EnigmeModele[] = [
     reponses: ['capitaine', 'le capitaine', 'capitaine de la selection'],
     indices: ['Un seul mot.', 'Celui qui mène l’équipe.']
   },
-  {
-    id: 'echecs-puzzle-mat',
-    nature: 'echecs',
-    type: 'square-puzzle',
-    enonce: 'Mat en un coup, à la dame. Touche la case où elle va.',
-    fenPuzzle: '6k1/5ppp/8/8/8/8/8/3Q2K1 w - - 0 1',
-    caseAttendue: 'd8',
-    indices: [
-      'Le roi noir est enfermé par ses propres pions.',
-      'La dame monte sur la 8ᵉ rangée.'
-    ]
-  },
+  POSITION_FACILE_2,
   {
     id: 'echecs-u20',
     nature: 'echecs',
@@ -184,5 +175,10 @@ export const ENIGMES_ECHECS_RESERVE: EnigmeModele[] = [
     enonce: 'Au petit roque des blancs, roi et tour finissent sur la même rangée. Laquelle ?',
     reponses: ['1'],
     indices: ['La rangée de départ des blancs.', 'Un seul chiffre.']
-  }
+  },
+  // Le fond de réserve : les 38 positions à diagramme non placées, dans l'ordre de
+  // difficulté croissante. Elles rendent le stock d'énigmes d'échecs inépuisable —
+  // même si le groupe ne livre **aucune** énigme personnelle, les 15 slots se
+  // remplissent sans joker, et sans jamais reposer deux fois la même question.
+  ...ENIGMES_POSITION.slice(2)
 ]

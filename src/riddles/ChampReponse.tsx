@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react'
 // @ts-ignore -- fourni par le lot E, résolu à l'assemblage
 import { Echiquier2D } from '../board2d/Echiquier2D'
 import { Bouton } from '../juice/Bouton'
+import { useJeu } from '../store'
 import type { Case, Enigme } from '../types'
 
 export interface ChampReponseProps {
@@ -41,7 +42,7 @@ export function ChampReponse({ enigme, onValider, desactive = false }: ChampRepo
     case 'square-puzzle':
       return <MiniPlateau enigme={enigme} onValider={onValider} desactive={desactive} />
     case 'square-live':
-      return <AttenteCaseLive />
+      return <PlateauLive onValider={onValider} desactive={desactive} />
   }
 }
 
@@ -160,22 +161,35 @@ function Choix({ enigme, onValider, desactive }: Required<ChampReponseProps>) {
   const [tentes, setTentes] = useState<number[]>([])
   useEffect(() => setTentes([]), [enigme.id])
 
+  /**
+   * Énigme de position : le diagramme se met **au-dessus** des boutons, et il est
+   * inerte. Le laisser cliquable inviterait à répondre en touchant une case, alors
+   * que la réponse est un coup complet, choisi dans la liste — deux gestes pour une
+   * seule question, dont un qui ne mène nulle part.
+   */
+  const diagramme = enigme.fenPuzzle ? (
+    <Diagramme fen={enigme.fenPuzzle} etiquette="Position à examiner" />
+  ) : null
+
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {choix.map((c, i) => (
-        <Bouton
-          key={c}
-          variante="accent"
-          pleineLargeur
-          disabled={desactive || tentes.includes(i)}
-          onClick={() => {
-            setTentes((t) => [...t, i])
-            onValider(String(i))
-          }}
-        >
-          {c}
-        </Bouton>
-      ))}
+    <div className="flex flex-col gap-3">
+      {diagramme}
+      <div className="grid grid-cols-2 gap-2">
+        {choix.map((c, i) => (
+          <Bouton
+            key={c}
+            variante="accent"
+            pleineLargeur
+            disabled={desactive || tentes.includes(i)}
+            onClick={() => {
+              setTentes((t) => [...t, i])
+              onValider(String(i))
+            }}
+          >
+            {c}
+          </Bouton>
+        ))}
+      </div>
     </div>
   )
 }
@@ -187,35 +201,106 @@ function MiniPlateau({ enigme, onValider, desactive }: Required<ChampReponseProp
   useEffect(() => setTentee(null), [enigme.id])
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-full max-w-[16rem]">
-        <Echiquier2D
-          fen={enigme.fenPuzzle ?? ''}
-          surlignees={tentee ? [tentee] : []}
-          onCase={(c: Case) => {
-            if (desactive) return
-            setTentee(c)
-            onValider(c)
-          }}
-        />
-      </div>
-      <p className="text-center text-sm text-texte-clair/70">Touche une case du petit plateau.</p>
-    </div>
+    <Diagramme
+      fen={enigme.fenPuzzle ?? ''}
+      tentee={tentee}
+      desactive={desactive}
+      etiquette="Position de l’énigme"
+      onCase={(c) => {
+        setTentee(c)
+        onValider(c)
+      }}
+    />
   )
 }
 
-// ─────────────────────────────────────────────────────────── square-live
+// ─────────────────────────────────────────────────────────────────── square-live
 
 /**
- * Le slot 7. Rien à saisir ici : le toucher est capté sur le **plateau principal**
- * par le lot B, et remonte à `BandeEnigme` par la prop `caseTouchee`. C'est
- * exactement pour cette énigme que la bande n'est pas une modale — une modale
- * cacherait le plateau et la rendrait injouable.
+ * Le slot 7. La position à examiner est celle de la **partie en cours** — le bot
+ * vient d'y laisser une pièce en prise — mais elle est redonnée ici sous forme de
+ * **diagramme généré**, dans la carte, comme les énigmes `square-puzzle`.
+ *
+ * Pourquoi ne pas se contenter de renvoyer au grand plateau : une énigme qui
+ * n'affiche qu'un pavé pointillé (« touche la case là-haut ») ne ressemble plus à
+ * une énigme. Les quatorze autres montrent quelque chose à lire ; celle-ci doit
+ * montrer la position. Le diagramme est le même composant SVG, alimenté par le FEN
+ * du store : aucune position n'est recopiée à la main, elle ne peut donc pas
+ * diverger de la partie réelle.
+ *
+ * Le grand plateau reste actif en parallèle (`onAttenteCaseLive`) : toucher la bonne
+ * case là-haut répond aussi. Deux entrées, une seule vérité.
  */
-function AttenteCaseLive() {
+function PlateauLive({
+  onValider,
+  desactive
+}: {
+  onValider: (v: string) => void
+  desactive: boolean
+}) {
+  const fen = useJeu((s) => s.fen)
+  const [tentee, setTentee] = useState<Case | null>(null)
+
   return (
-    <p className="rounded-xl border-2 border-dashed border-lisere/60 px-4 py-3 text-center font-titre text-lg text-lisere">
-      Touche la case sur le grand plateau ↑
-    </p>
+    <Diagramme
+      fen={fen}
+      tentee={tentee}
+      desactive={desactive}
+      etiquette="Position en cours"
+      onCase={(c) => {
+        setTentee(c)
+        onValider(c)
+      }}
+    />
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────── diagramme
+
+/**
+ * Le diagramme de position, partagé par les deux énigmes à case.
+ *
+ * `coordonnees` est activé : sans les lettres et les chiffres en bordure, il doit
+ * compter les colonnes de tête pour désigner une case, et il répond à côté. C'est
+ * aussi ce qui distingue un diagramme d'échiquier d'un damier décoratif.
+ *
+ * `max-w-[20rem]` : à 320 px de large, marge de coordonnées comprise, une case fait
+ * environ 35 px. Plus étroit, les touchers déraillent d'une case — or ici une case
+ * d'écart, c'est une mauvaise réponse.
+ */
+function Diagramme({
+  fen,
+  tentee = null,
+  desactive = false,
+  etiquette,
+  onCase
+}: {
+  fen: string
+  tentee?: Case | null
+  desactive?: boolean
+  etiquette: string
+  /** Absent = diagramme **inerte**, à lire seulement (énigmes à choix multiple). */
+  onCase?: (c: Case) => void
+}) {
+  const inerte = onCase == null
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-full max-w-[20rem] overflow-hidden rounded-xl border-4 border-contour bg-contour shadow-[0_4px_12px_rgba(0,0,0,0.35)]">
+        <Echiquier2D
+          fen={fen}
+          coordonnees
+          surlignees={tentee ? [tentee] : []}
+          desactive={desactive || inerte}
+          etiquette={etiquette}
+          onCase={(c: Case) => {
+            if (desactive || inerte) return
+            onCase?.(c)
+          }}
+        />
+      </div>
+      {!inerte && (
+        <p className="text-center text-sm text-texte-clair/70">Touche une case du diagramme.</p>
+      )}
+    </div>
   )
 }

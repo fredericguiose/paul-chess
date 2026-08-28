@@ -12,6 +12,7 @@ import { Chess } from 'chess.js'
 import {
   CAMP_BOT,
   CAMP_JOUEUR,
+  NOMBRE_DE_COUPS,
   plyVersCoup,
   type Camp,
   type Case,
@@ -131,6 +132,21 @@ export function apresCoupDuBot(): void {
 
   const chess = new Chess(s.fen)
   if (chess.isGameOver()) {
+    s.setPhase('revelation')
+    return
+  }
+
+  /**
+   * ⚠️ Filet de dernier recours : **le jeu doit toujours finir.**
+   *
+   * `botPeutAbandonner()` exige 15 coups **et** une évaluation assez basse. Si le bot
+   * n'est pas assez perdant au 15ᵉ coup, la partie continuait au-delà — et il n'y a
+   * plus d'énigme après la 15ᵉ. Résultat constaté : une carte vide, indéfiniment,
+   * pile au moment du cadeau.
+   *
+   * Passé les 15 énigmes, la position ne décide plus de rien : on révèle.
+   */
+  if (s.enigmesVues() >= NOMBRE_DE_COUPS) {
     s.setPhase('revelation')
     return
   }
