@@ -174,12 +174,24 @@ function Choix({ enigme, onValider, desactive }: Required<ChampReponseProps>) {
   return (
     <div className="flex flex-col gap-3">
       {diagramme}
-      <div className="grid grid-cols-2 gap-2">
+      {/*
+        Une colonne, chaque choix sur toute la largeur, **et tous de la même hauteur**.
+        En deux colonnes, un énoncé un peu long s'écrasait en bandeau étroit sur six
+        lignes — illisible sur un téléphone, alors que ces réponses sont lues à voix
+        haute devant le groupe.
+        `auto-rows-fr` aligne toutes les lignes sur la plus haute : sans ça, une
+        réponse courte donne un bouton deux fois plus petit que son voisin, et la
+        taille du bouton devient un indice sur la bonne réponse.
+      */}
+      <div className="grid auto-rows-fr grid-cols-1 gap-2">
         {choix.map((c, i) => (
           <Bouton
             key={c}
             variante="accent"
             pleineLargeur
+            // `h-full` : le bouton remplit sa cellule de grille, qui est déjà
+            // alignée sur la plus haute par `auto-rows-fr`.
+            className="h-full"
             disabled={desactive || tentes.includes(i)}
             onClick={() => {
               setTentes((t) => [...t, i])
