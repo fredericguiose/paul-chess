@@ -35,7 +35,8 @@
  *   type     : 'text' | 'code' | 'choice' | 'square-puzzle' | 'offscreen'
  *   enonce   : la question, 2 lignes max
  *   indices  : 2 textes ['vague', 'explicite']
- *   auteur   : votre prénom (facultatif, s'affiche sous l'énigme)
+ *   auteur   : votre prénom (facultatif, JAMAIS affiché : sert seulement à savoir
+ *              qui a fourni quoi s'il faut retoucher l'énigme)
  *
  * ⚠️ N'utilisez PAS le type 'square-live' : il est réservé au slot 7.
  * ⚠️ Deux énigmes 'offscreen' AU MAXIMUM sur tout le jeu.

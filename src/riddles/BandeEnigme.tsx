@@ -136,7 +136,6 @@ export function BandeEnigme({
         <div className="flex items-baseline justify-between gap-3">
           <span className="font-titre text-sm uppercase tracking-wider text-lisere/80">
             Énigme {coup} / {NOMBRE_DE_COUPS}
-            {enigme.nature === 'perso' && enigme.auteur ? ` · ${enigme.auteur}` : ''}
           </span>
           {peutPasser && (
             <Bouton variante="bois" taille="sm" onClick={passer}>

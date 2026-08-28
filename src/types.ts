@@ -116,7 +116,13 @@ export interface Enigme {
   fenPuzzle?: string
   /** Révélés progressivement : 2 échecs → indice 0, 4 → indice 1, 6 → bouton passer. */
   indices: string[]
-  /** `perso` uniquement : qui l'a écrite. */
+  /**
+   * `perso` uniquement : qui l'a écrite.
+   *
+   * **Jamais affiché.** Le nom est de la tenue de comptes : savoir qui a fourni
+   * quoi quand il faut retoucher une énigme. À l'écran il gâchait l'effet, en
+   * annonçant la personne avant que Paul reconnaisse sa patte.
+   */
   auteur?: string
 }
 
