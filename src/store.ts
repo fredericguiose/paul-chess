@@ -25,15 +25,9 @@ import {
   type ProgressionEnigme
 } from './types'
 
-/**
- * Seuils de révélation des indices. Aucune énigme ne peut bloquer le cadeau.
- *
- * Exportés parce que l'écran d'intro les **annonce** au joueur. Les réécrire là-bas
- * en dur les ferait diverger dès le premier réglage : le jeu expliquerait une règle
- * qu'il n'applique pas.
- */
-export const ECHECS_AVANT_INDICE = 2
-export const ECHECS_AVANT_PASSER = 6
+/** Seuils de révélation des indices. Aucune énigme ne peut bloquer le cadeau. */
+const ECHECS_AVANT_INDICE = 2
+const ECHECS_AVANT_PASSER = 6
 
 interface EtatJeu {
   // ── déroulé

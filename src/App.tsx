@@ -1,5 +1,5 @@
 import { useCallback, useEffect, type ReactNode } from 'react'
-import { ECHECS_AVANT_INDICE, ECHECS_AVANT_PASSER, useJeu } from './store'
+import { useJeu } from './store'
 import { NOMBRE_DE_COUPS, type Case } from './types'
 import { Board3D } from './board/Board3D'
 import { PlateauSecours } from './board2d/PlateauSecours'
@@ -160,14 +160,18 @@ export function App() {
  * arrivent pendant qu'il lit.
  *
  * ⚠️ Il l'ouvre sur son téléphone, entouré de huit personnes qui vont lire par-dessus
- * son épaule. « 20 énigmes, 20 coups » ne suffisait pas : il ne savait ni qu'il joue
- * contre un vrai moteur, ni que la limite de coups est appliquée, ni que c'est
- * l'avantage qui tranche, ni qu'il ne peut pas se retrouver coincé. Quatre règles
- * qu'on ne peut pas découvrir en jouant — la dernière surtout, parce que la découvrir
- * en jouant veut dire s'être déjà cru bloqué devant tout le monde.
+ * son épaule. Trois règles, pas plus : seul ce qu'on ne peut pas deviner en jouant.
  *
- * Ce qui n'est **pas** dit, volontairement : que le cadeau se dévoile même en cas de
- * défaite. L'annoncer ici retirerait tout enjeu aux vingt coups.
+ * Deux règles ont été écrites puis retirées, ne pas les remettre :
+ *   - « c'est une vraie partie contre un vrai moteur » : de la pub défensive. À 1900
+ *     Elo il le voit en deux coups, et « ça tourne dans ton téléphone » ne lui sert
+ *     à rien.
+ *   - « tu ne peux pas rester bloqué, 2 erreurs → un indice » : les indices
+ *     apparaissent d'eux-mêmes, il n'a ni à demander ni à s'avouer coincé. Annoncer
+ *     le filet avant de commencer ne fait qu'enlever la difficulté.
+ *
+ * Ce qui n'est **pas** dit non plus, volontairement : que le cadeau se dévoile même
+ * en cas de défaite. L'annoncer ici retirerait tout enjeu aux vingt coups.
  */
 function Intro() {
   const setPhase = useJeu((s) => s.setPhase)
@@ -189,30 +193,19 @@ function Intro() {
       </p>
 
       <ol className="flex flex-col gap-3">
-        <Regle n={1} titre="C'est une vraie partie">
-          Tu joues les blancs contre un vrai moteur d'échecs, qui tourne dans ton
-          téléphone. Aucun coup n'est écrit d'avance.
-        </Regle>
-
-        <Regle n={2} titre="Une énigme, un coup">
+        <Regle n={1} titre="Une énigme, un coup">
           Bonne réponse → tu joues. Puis c'est à lui. Puis énigme suivante.
         </Regle>
 
-        <Regle n={3} titre={`${NOMBRE_DE_COUPS} coups, pas un de plus`}>
+        <Regle n={2} titre={`${NOMBRE_DE_COUPS} coups, pas un de plus`}>
           La partie s'arrête à ton {NOMBRE_DE_COUPS}ᵉ coup. Gagne celui qui mate — ou,
           s'il n'y a pas de mat, <strong className="text-lisere">celui qui a
-          l'avantage</strong> à cet instant. La limite est réelle.
+          l'avantage</strong> à cet instant.
         </Regle>
 
-        <Regle n={4} titre="Les énigmes viennent de tes potes">
+        <Regle n={3} titre="Les énigmes viennent de tes potes">
           Ils les ont écrites pour toi. Certaines parlent d'échecs, d'autres pas du
           tout. Quelques-unes ont leur réponse ailleurs que sur l'écran.
-        </Regle>
-
-        <Regle n={5} titre="Tu ne peux pas rester bloqué">
-          {ECHECS_AVANT_INDICE} erreurs sur une énigme → un indice.{' '}
-          {ECHECS_AVANT_INDICE * 2} → un second. {ECHECS_AVANT_PASSER} → tu peux la
-          passer. Aucune énigme ne peut t'arrêter.
         </Regle>
       </ol>
 
