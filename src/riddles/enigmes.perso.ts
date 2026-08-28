@@ -63,9 +63,12 @@ export const ENIGMES_PERSO: EnigmeModele[] = [
     type: 'choice',
     enonce:
       "Juste après notre première rencontre, on a failli avoir de gros problèmes à cause de moi. C'était quoi ?",
+    // Formulé par Samuel, gardé tel quel : c'est son souvenir et sa blague.
+    // Une version édulcorée avait été essayée — elle rendait l'énigme vague et
+    // oubliable, alors que c'est le détail précis qui la rend reconnaissable.
     choix: [
       "Tu utilisais mon téléphone et tu t'es fait choper par M. Richard",
-      "J'ai tapé n'importe quoi sur l'ordi du CDI"
+      "J'ai tapé por** sur l'ordi du CDI"
     ],
     bonneReponse: 1,
     indices: ['Ce n’était pas un téléphone.', 'Un ordinateur, au CDI.'],
