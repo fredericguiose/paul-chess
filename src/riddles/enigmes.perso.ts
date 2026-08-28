@@ -76,6 +76,29 @@ export const ENIGMES_PERSO: EnigmeModele[] = [
     auteur: 'Samuel'
   },
 
+  // ── de Mathys ───────────────────────────────────────────────────────────
+  {
+    id: 'perso-deux-mensonges',
+    nature: 'perso',
+    type: 'choice',
+    enonce: 'Deux mensonges, une vérité. Laquelle est vraie ?',
+    // Les trois affirmations telles que Mathys les a écrites. Elles se vérifient
+    // dans l’instant où il les lit, ce qui est tout l’intérêt : la 1 est fausse
+    // puisqu’il la lit, la 3 est fausse puisque la partie n’est pas finie, il
+    // reste la 2.
+    choix: [
+      'Tu ne lis pas cette énigme',
+      'Tu ne sais pas laquelle est la prochaine',
+      'Tu as gagné le match d’avance'
+    ],
+    bonneReponse: 1,
+    indices: [
+      'Regarde ce que tu es en train de faire, là, maintenant.',
+      'Et regarde le compteur de coups : rien n’est encore gagné.'
+    ],
+    auteur: 'Mathys'
+  },
+
   // ── d'Ibrahim ───────────────────────────────────────────────────────────
   {
     id: 'perso-senegal',

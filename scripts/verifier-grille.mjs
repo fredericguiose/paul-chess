@@ -24,5 +24,7 @@ for (let c = 1; c <= NOMBRE_DE_COUPS; c++) {
   if (e.type === 'choice' && (!e.choix || e.bonneReponse === undefined)) { console.log('       ⛔ QCM sans choix'); ko++ }
   if (['text','code','offscreen'].includes(e.type) && !e.reponses?.length) { console.log('       ⛔ sans réponse'); ko++ }
 }
-console.log('\n' + (ko ? ko + ' PROBLEME(S)' : 'les 15 slots sont jouables'))
+// Le total vient de `NOMBRE_DE_COUPS`, jamais ecrit en dur : il valait 15, et le
+// script annoncait encore "les 15 slots" en en verifiant 20.
+console.log('\n' + (ko ? ko + ' PROBLEME(S)' : `les ${NOMBRE_DE_COUPS} slots sont jouables`))
 await s.close()
