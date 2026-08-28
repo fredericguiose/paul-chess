@@ -34,7 +34,14 @@ function verifier(nom, condition, detail = '') {
 
 // ─────────────────────────────────────────── polyfills navigateur minimaux
 
-/** Le store zustand est persisté dans `localStorage`. */
+/**
+ * Le store zustand est persisté dans `localStorage`.
+ *
+ * `window` est posé aussi : sans lui, le middleware `persist` conclut qu'il n'est pas
+ * dans un navigateur et crache « the given storage is currently unavailable » à CHAQUE
+ * écriture. Le test passait quand même, mais noyé sous des milliers de lignes — donc
+ * illisible, donc inutile le jour où il faudra vraiment le lire.
+ */
 function installerLocalStorage() {
   const memoire = new Map()
   globalThis.localStorage = {
@@ -47,6 +54,7 @@ function installerLocalStorage() {
       return memoire.size
     }
   }
+  globalThis.window ??= globalThis
 }
 
 /**
@@ -239,6 +247,9 @@ async function main() {
     )
 
     let dansFenetre = 0
+    // Nombre de parties ou au moins un candidat tombait dans la fenetre : c'est la
+    // seule reference honnete pour `dansFenetre`.
+    let fenetrePossible = 0
     let jamaisLePire = true
     let jamaisLeMeilleur = true
     const alea = (() => {
@@ -257,6 +268,13 @@ async function main() {
       }
       const coups = cps.map((_, i) => `x${i}y${i}`)
       const candidats = cps.map((c, i) => ({ uci: coups[i], cp: c, rang: i }))
+      if (
+        cps.some(
+          (c) => c >= REGLES_BOT.fauteCible.min && c <= REGLES_BOT.fauteCible.max
+        )
+      ) {
+        fenetrePossible++
+      }
       const res = faute.choisirFaute(candidats, { couvreTousLesCoups: true, forcer: true })
       if (!res.choix) {
         jamaisLePire = false
@@ -268,10 +286,18 @@ async function main() {
     }
     verifier('la faute n’est jamais le pire coup légal', jamaisLePire)
     verifier('la faute n’est jamais le meilleur coup', jamaisLeMeilleur)
+    // ⚠️ Cette verification comptait auparavant les parties tombees dans la fenetre
+    // et exigeait 16 sur 20. Elle mesurait la chance de l'eventail aleatoire, pas le
+    // code : avec des pas de 40 a 300 centipions, l'eventail saute parfois par-dessus
+    // [min, max] et aucun candidat n'y tombe. Elle rendait 15/20 sur une
+    // implementation correcte.
+    //
+    // L'invariante reelle, elle, vaut toujours : *quand* un candidat est dans la
+    // fenetre, c'est lui qui est choisi.
     verifier(
-      'la faute tombe dans REGLES_BOT.fauteCible dans la grande majorité des cas',
-      dansFenetre >= 16,
-      `${dansFenetre}/20`
+      'quand un candidat est dans REGLES_BOT.fauteCible, il est choisi',
+      dansFenetre === fenetrePossible,
+      `${dansFenetre} choisis pour ${fenetrePossible} possibles`
     )
 
     // Cas explicite : un seul coup dans la fenêtre, c'est lui.
@@ -361,11 +387,20 @@ async function main() {
     )
   }
 
-  // ── 5. abandon
-  console.log('\n5. abandon')
-  const abandonMod = await charger('abandon.ts')
-  const storeMod = await serveur.ssrLoadModule('/src/store.ts')
-  const useJeu = storeMod.useJeu
+  // ── 5. fin de partie
+  //
+  // ⚠️ Cette section testait `botDoitAbandonner()`, disparue avec l'abandon du bot.
+  // Elle a donc levé un TypeError à chaque exécution — pendant que `npm run build`
+  // passait, ce qui donnait l'illusion que tout allait bien. Un test qui plante
+  // n'est pas un test qui échoue : personne ne lit le message.
+  //
+  // La règle est maintenant temporelle et sans exception : `NOMBRE_DE_COUPS` coups
+  // du joueur, puis gagne celui qui a l'avantage. Les deux bugs historiques
+  // restent testés, parce que leur cause reste possible : faire dépendre la FIN
+  // d'une ÉVALUATION.
+  console.log('\n5. fin de partie')
+  const finMod = await charger('abandon.ts')
+  const { useJeu } = await serveur.ssrLoadModule('/src/store.ts')
   {
     const jouer = (nb) => {
       useJeu.getState().reinitialiser()
@@ -386,64 +421,69 @@ async function main() {
       }
     }
 
-    // Bug historique 1 : abandon juste après la faute scriptée.
+    // Bug historique 1 : la partie s'arrêtait juste après la faute scriptée.
     jouer(8)
     useJeu.getState().setEvalBot(-400)
-    verifier(
-      'PAS d’abandon juste après la faute (coup 8, éval −400)',
-      abandonMod.botDoitAbandonner() === false
-    )
+    verifier('partie NON finie au 8ᵉ coup, même à −400', finMod.partieFinie() === false)
 
-    // Bug historique 2 : abandon dès la 13ᵉ énigme.
+    // Bug historique 2 : elle s'arrêtait dès la 13ᵉ énigme, coupant le final.
     jouer(13)
     useJeu.getState().setEvalBot(-1200)
     for (let c = 1; c <= 13; c++) useJeu.getState().resoudreEnigme(c)
     verifier(
-      'PAS d’abandon au 13ᵉ coup, même à −1200 (énigmes 14 et 15 préservées)',
-      abandonMod.botDoitAbandonner() === false
+      'partie NON finie au 13ᵉ coup, même à −1200 (le final est préservé)',
+      finMod.partieFinie() === false
     )
 
     jouer(NOMBRE_DE_COUPS - 1)
     useJeu.getState().setEvalBot(-1500)
     verifier(
-      `PAS d’abandon au ${NOMBRE_DE_COUPS - 1}ᵉ coup`,
-      abandonMod.botDoitAbandonner() === false
+      `partie NON finie au ${NOMBRE_DE_COUPS - 1}ᵉ coup, même à −1500`,
+      finMod.partieFinie() === false
     )
 
     jouer(NOMBRE_DE_COUPS)
-    useJeu.getState().setEvalBot(-400)
     verifier(
-      `abandon autorisé après le ${NOMBRE_DE_COUPS}ᵉ coup du joueur`,
-      abandonMod.botDoitAbandonner() === true
+      `partie finie après le ${NOMBRE_DE_COUPS}ᵉ coup du joueur`,
+      finMod.partieFinie() === true
     )
 
-    // Jamais dans une position égale ou gagnante pour le bot.
+    // L'évaluation ne décide jamais de la fin, seulement du résultat.
+    for (const cp of [-1500, -400, 0, 400, 1500]) {
+      useJeu.getState().setEvalBot(cp)
+      verifier(
+        `la fin ne dépend pas de l'évaluation (${cp} cp)`,
+        finMod.partieFinie() === true
+      )
+    }
+
+    // Le résultat, lui, la lit — et une seule fois, à l'arrivée.
+    useJeu.getState().setEvalBot(-REGLES_BOT.seuilAvantage - 1)
+    verifier('victoire si le joueur mène au dernier coup', useJeu.getState().issue() === 'victoire')
     useJeu.getState().setEvalBot(0)
+    verifier('nulle si personne ne mène', useJeu.getState().issue() === 'nulle')
+    useJeu.getState().setEvalBot(REGLES_BOT.seuilAvantage + 1)
+    verifier('défaite si le bot mène au dernier coup', useJeu.getState().issue() === 'defaite')
+
     verifier(
-      'jamais d’abandon dans une position égale, même au bon moment',
-      abandonMod.botDoitAbandonner() === false
-    )
-    useJeu.getState().setEvalBot(400)
-    verifier(
-      'jamais d’abandon dans une position gagnante pour le bot',
-      abandonMod.botDoitAbandonner() === false &&
-        !abandonMod.positionPerduePourLeBot(400)
+      'position perdue pour le bot lue sur la cible de faute',
+      finMod.positionPerduePourLeBot(REGLES_BOT.fauteCible.max) === true &&
+        finMod.positionPerduePourLeBot(0) === false
     )
 
     useJeu.getState().setEvalBot(-900)
-    const diag = abandonMod.diagnosticAbandon()
+    const diag = finMod.diagnosticFin()
     verifier(
       'diagnostic cohérent avec le store',
-      diag.autorise === true && diag.coupsJoueur === NOMBRE_DE_COUPS && diag.coupsRestants === 0,
+      diag.coupsJoues === NOMBRE_DE_COUPS &&
+        diag.coupsRestants === 0 &&
+        diag.terminee === true &&
+        diag.issue === 'victoire',
       JSON.stringify(diag)
     )
-    verifier('objectif tenu à 15 coups', abandonMod.objectifTenu() === true)
-    jouer(NOMBRE_DE_COUPS + 3)
-    verifier(
-      'objectif raté au-delà, sans conséquence sur la partie',
-      abandonMod.objectifTenu() === false
-    )
+
     useJeu.getState().reinitialiser()
+    verifier('après réinitialisation, la partie repart', finMod.partieFinie() === false)
   }
 
   // ── 6. moteur : enchaînement complet livre → faute → garde-fou
@@ -473,23 +513,38 @@ async function main() {
     moteur.nouvellePartie(() => 0) // faute au premier coup autorisé
     const chess = new Chess()
     const sans = []
-    const coupsJoueur = ['e4', 'Nf3', 'd4', 'Nxd4', 'Nc3', 'Bc4', 'Bf4', 'Qd2', 'O-O-O']
+    // ⚠️ Deux erreurs successives ici, notees pour ne pas les refaire.
+    //
+    // 1. La liste des coups du joueur s'arretait a 9. La fenetre de faute etant
+    //    passee a `fauteEntreCoups` = 16-18, la simulation ne l'atteignait jamais :
+    //    l'assertion sur la faute lisait `sources[15]`, indefini, et celle sur le
+    //    garde-fou « passait » sur un `slice(16)` vide. Un faux vert posé sur un
+    //    faux rouge.
+    // 2. Prolonger en jouant `moves()[0]` des deux cotes : la partie mourait au 13e
+    //    coup (nulle), toujours avant la fenetre.
+    //
+    // Ce qui est teste ici est la SOURCE du coup du bot au fil des coups, pas la
+    // vraisemblance de la partie. Les 4 premiers coups avancent donc un vrai plateau
+    // — le livre les attend — puis on GELE la position et on n'avance plus que le
+    // compteur. Le moteur bidon recalcule ses candidats depuis `scenarioFen`, donc
+    // ses coups restent legaux, et la sequence livre → faute → garde-fou se joue
+    // jusqu'au bout sans dependre du hasard d'une partie inventee.
+    const COUPS_SIMULES = REGLES_BOT.fauteEntreCoups.fin + 1
+    const coupsJoueur = ['e4', 'Nf3', 'd4', 'Nxd4']
     let evalBot = 0
     let sources = []
     let interroge = null
 
-    for (const [i, sanJoueur] of coupsJoueur.entries()) {
-      let joue
-      try {
-        joue = chess.move(sanJoueur)
-      } catch {
-        joue = null
+    for (let i = 0; i < COUPS_SIMULES; i++) {
+      const sanJoueur = coupsJoueur[i]
+      if (sanJoueur) {
+        const joue = chess.move(sanJoueur)
+        sans.push(joue.san)
+        scenarioFen = chess.fen()
       }
-      if (!joue) break
-      sans.push(joue.san)
-      scenarioFen = chess.fen()
+
       const d = await moteur.demanderCoupBot({
-        fen: chess.fen(),
+        fen: scenarioFen,
         sansJoues: sans,
         coup: i + 1,
         evalBot
@@ -497,11 +552,21 @@ async function main() {
       if (!d) break
       if (d.moteurInterroge && interroge === null) interroge = i + 1
       sources.push(d.source)
-      chess.move(d.san)
-      sans.push(d.san)
+      // Le coup du bot n'est joue sur le plateau que pendant le livre : au-dela, la
+      // position est gelee et le rejouer la ferait deriver.
+      if (sanJoueur) {
+        chess.move(d.san)
+        sans.push(d.san)
+        scenarioFen = chess.fen()
+      }
       evalBot = d.cp
     }
 
+    verifier(
+      `${COUPS_SIMULES} coups simules, aucun abandon en route`,
+      sources.length === COUPS_SIMULES,
+      `${sources.length} coups`
+    )
     verifier(
       'les 4 premiers coups du bot viennent du livre',
       sources.slice(0, 4).every((s) => s === 'livre'),
@@ -513,9 +578,12 @@ async function main() {
       sources[REGLES_BOT.fauteEntreCoups.debut - 1] === 'faute',
       sources.join(' ')
     )
+    const apresFaute = sources.slice(REGLES_BOT.fauteEntreCoups.debut)
     verifier(
       'après la faute, le garde-fou prend le relais',
-      sources.slice(REGLES_BOT.fauteEntreCoups.debut).every((s) => s === 'gardeFou'),
+      // `apresFaute.length > 0` : sans ce garde, un `slice` vide rendait `every`
+      // vrai et l'assertion passait en ne verifiant rien.
+      apresFaute.length > 0 && apresFaute.every((s) => s === 'gardeFou'),
       sources.join(' ')
     )
     verifier(
