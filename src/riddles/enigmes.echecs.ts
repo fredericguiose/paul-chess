@@ -36,16 +36,23 @@ import { ENIGMES_POSITION } from './enigmes.positions'
  * absente — la case se calcule à la volée sur la position réelle et arrive par la
  * prop `caseLiveAttendue` de `BandeEnigme`.
  */
-export const ENIGME_COUPLAGE: EnigmeModele = {
-  id: 'echecs-prise-live',
-  nature: 'echecs',
-  type: 'square-live',
-  enonce: 'Le bot vient de laisser une pièce en prise. Touche sa case sur le diagramme.',
-  indices: [
-    'Regarde ce qui vient de bouger : la pièce n’est plus défendue.',
-    'Compte les attaquants et les défenseurs de la case. Un contre zéro.'
-  ]
-}
+/**
+ * Le slot 7 : un vrai problème d'échecs, comme sur Chess.com.
+ *
+ * ⚠️ Ce que ce slot NE fait PLUS. Il portait une énigme `square-live` : « le bot
+ * vient de laisser une pièce en prise, touche sa case », posée sur la **position
+ * réelle en cours**. Injouable, constaté à l'écran : la position de la partie n'a
+ * aucune raison de contenir une pièce en prise au 7e coup, donc l'énoncé était faux
+ * et il n'y avait rien à trouver.
+ *
+ * C'est un reste du design où les énigmes se résolvaient sur le plateau principal,
+ * abandonné depuis : une énigme de position s'affiche sur **son propre diagramme**,
+ * avec sa **propre position**, et ne touche jamais à la partie en cours.
+ *
+ * On prend donc la position la plus tranchée du lot généré depuis ses vraies
+ * parties (`positions.qcm.ts`) : diagramme + quatre coups en boutons.
+ */
+export const ENIGME_COUPLAGE: EnigmeModele = ENIGMES_POSITION[0]
 
 /**
  * Les énigmes de remplissage, **par difficulté croissante**.
