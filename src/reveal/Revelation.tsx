@@ -224,7 +224,7 @@ function Cadeau() {
         <span>
           {issue === 'defaite' ? 'Partie de ' : 'Gagné en '}
           <strong className="text-lisere">{coups} coups</strong>
-          {issue !== 'defaite' && coups <= NOMBRE_DE_COUPS && ' — dans les temps'}
+          {issue !== 'defaite' && coups <= NOMBRE_DE_COUPS && ', dans les temps'}
         </span>
         {sansIndice > 0 && (
           <span>

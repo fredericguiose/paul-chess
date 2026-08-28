@@ -1,0 +1,2 @@
+# Le glue JS de Stockfish part tel quel : pas de conversion de fins de ligne.
+public/engine/* -text

@@ -198,7 +198,7 @@ function Intro() {
         </Regle>
 
         <Regle n={2} titre={`${NOMBRE_DE_COUPS} coups, pas un de plus`}>
-          La partie s'arrête à ton {NOMBRE_DE_COUPS}ᵉ coup. Gagne celui qui mate — ou,
+          La partie s'arrête à ton {NOMBRE_DE_COUPS}ᵉ coup. Gagne celui qui mate. Et
           s'il n'y a pas de mat, <strong className="text-lisere">celui qui a
           l'avantage</strong> à cet instant.
         </Regle>

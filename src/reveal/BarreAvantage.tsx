@@ -76,8 +76,8 @@ export function BarreAvantage({ evalBot, issue }: BarreAvantageProps) {
         {verdict}
         {issue !== 'nulle' && (
           <>
-            {' '}
-            — <strong className="text-lisere">{ecart}</strong>
+            {' : '}
+            <strong className="text-lisere">{ecart}</strong>
           </>
         )}
       </p>

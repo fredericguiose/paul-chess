@@ -1,14 +1,17 @@
 node_modules/
 dist/
 
-# Stockfish : 7,3 Mo de wasm, récupérés par script. Ne pas versionner un binaire.
-# Pour les remettre :
-#   curl -sLO --output-dir public/engine \
-#     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.js
-#   curl -sLO --output-dir public/engine \
-#     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.wasm
-public/engine/*.wasm
-public/engine/*.js
+# ATTENTION : `public/engine/` EST versionne, volontairement.
+#
+# 7,3 Mo de wasm dans un depot, c'est laid. Mais Vercel builde depuis GitHub :
+# ignores, ces deux fichiers manquent du deploiement et le jeu part sans
+# adversaire. Les retelecharger dans une etape de build ferait dependre la soiree
+# d'anniversaire de la disponibilite d'unpkg. Ils sont sous la limite GitHub
+# (100 Mo par fichier) et ne changeront plus.
+#
+# Origine, si jamais il faut les regenerer :
+#   curl -sLO --output-dir public/engine #     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.js
+#   curl -sLO --output-dir public/engine #     https://unpkg.com/stockfish@18/bin/stockfish-18-lite-single.wasm
 
 # Binaire Stockfish desktop (73 Mo d'archive + l'exe), utilisé seulement par les
 # scripts d'analyse hors-ligne. Se retélécharge depuis les releases GitHub officielles.
