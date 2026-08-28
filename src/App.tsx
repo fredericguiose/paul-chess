@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from 'react'
-import { useJeu } from './store'
+import { useCallback, useEffect, type ReactNode } from 'react'
+import { ECHECS_AVANT_INDICE, ECHECS_AVANT_PASSER, useJeu } from './store'
 import { NOMBRE_DE_COUPS, type Case } from './types'
 import { Board3D } from './board/Board3D'
 import { PlateauSecours } from './board2d/PlateauSecours'
@@ -158,6 +158,16 @@ export function App() {
 /**
  * Écran d'intro — **et écran de chargement déguisé** : les 7,3 Mo de Stockfish
  * arrivent pendant qu'il lit.
+ *
+ * ⚠️ Il l'ouvre sur son téléphone, entouré de huit personnes qui vont lire par-dessus
+ * son épaule. « 20 énigmes, 20 coups » ne suffisait pas : il ne savait ni qu'il joue
+ * contre un vrai moteur, ni que la limite de coups est appliquée, ni que c'est
+ * l'avantage qui tranche, ni qu'il ne peut pas se retrouver coincé. Quatre règles
+ * qu'on ne peut pas découvrir en jouant — la dernière surtout, parce que la découvrir
+ * en jouant veut dire s'être déjà cru bloqué devant tout le monde.
+ *
+ * Ce qui n'est **pas** dit, volontairement : que le cadeau se dévoile même en cas de
+ * défaite. L'annoncer ici retirerait tout enjeu aux vingt coups.
  */
 function Intro() {
   const setPhase = useJeu((s) => s.setPhase)
@@ -165,17 +175,54 @@ function Intro() {
   const setMouvementReduit = useJeu((s) => s.setMouvementReduit)
 
   return (
-    <div className="mx-auto flex h-full max-w-md flex-col justify-center gap-7 px-6">
-      <h1 className="font-titre text-4xl leading-tight text-lisere">Bon anniversaire</h1>
+    <div className="mx-auto flex h-full max-w-md flex-col gap-5 overflow-y-auto px-6 py-8">
+      <header className="flex flex-col gap-1">
+        <p className="font-titre text-xl text-accent">Bon anniversaire</p>
+        <h1 className="font-titre text-4xl leading-none text-lisere drop-shadow-[0_4px_0_rgba(58,35,19,0.8)]">
+          Paul-Erwan
+        </h1>
+      </header>
 
-      <p className="text-lg leading-snug">
-        Tu vas jouer une partie d'échecs. Tu ne peux jouer ton prochain coup qu'en
-        répondant à une énigme.
+      <p className="text-lg leading-snug text-texte-clair">
+        Tu vas jouer une partie d'échecs. Mais tu ne débloques ton coup qu'en
+        résolvant une énigme.
       </p>
 
-      <p className="text-lg leading-snug">
-        {NOMBRE_DE_COUPS} énigmes, {NOMBRE_DE_COUPS} coups. À la fin, il y a quelque
-        chose pour toi.
+      <ol className="flex flex-col gap-3">
+        <Regle n={1} titre="C'est une vraie partie">
+          Tu joues les blancs contre un vrai moteur d'échecs, qui tourne dans ton
+          téléphone. Aucun coup n'est écrit d'avance.
+        </Regle>
+
+        <Regle n={2} titre="Une énigme, un coup">
+          Bonne réponse → tu joues. Puis c'est à lui. Puis énigme suivante.
+        </Regle>
+
+        <Regle n={3} titre={`${NOMBRE_DE_COUPS} coups, pas un de plus`}>
+          La partie s'arrête à ton {NOMBRE_DE_COUPS}ᵉ coup. Gagne celui qui mate — ou,
+          s'il n'y a pas de mat, <strong className="text-lisere">celui qui a
+          l'avantage</strong> à cet instant. La limite est réelle.
+        </Regle>
+
+        <Regle n={4} titre="Les énigmes viennent de tes potes">
+          Ils les ont écrites pour toi. Certaines parlent d'échecs, d'autres pas du
+          tout. Quelques-unes ont leur réponse ailleurs que sur l'écran.
+        </Regle>
+
+        <Regle n={5} titre="Tu ne peux pas rester bloqué">
+          {ECHECS_AVANT_INDICE} erreurs sur une énigme → un indice.{' '}
+          {ECHECS_AVANT_INDICE * 2} → un second. {ECHECS_AVANT_PASSER} → tu peux la
+          passer. Aucune énigme ne peut t'arrêter.
+        </Regle>
+      </ol>
+
+      <p className="text-base leading-snug text-texte-clair/70">
+        Pour jouer : touche l'échiquier pour le voir de dessus, puis la pièce, puis sa
+        case d'arrivée.
+      </p>
+
+      <p className="font-titre text-xl leading-snug text-accent">
+        Et au bout des {NOMBRE_DE_COUPS} coups, il y a quelque chose pour toi.
       </p>
 
       <label className="flex items-center gap-3 text-base text-texte-clair/70">
@@ -192,5 +239,33 @@ function Intro() {
         Commencer
       </Bouton>
     </div>
+  )
+}
+
+/**
+ * Une règle numérotée. Le numéro dans une pastille, le titre en gras, l'explication
+ * dessous — il doit pouvoir ne lire que les titres et comprendre l'essentiel.
+ */
+function Regle({
+  n,
+  titre,
+  children
+}: {
+  n: number
+  titre: string
+  children: ReactNode
+}) {
+  return (
+    <li className="flex gap-3">
+      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-lisere/70 bg-bois font-titre text-sm text-lisere">
+        {n}
+      </span>
+      <span className="flex flex-col gap-0.5">
+        <strong className="font-titre text-lg leading-tight text-texte-clair">
+          {titre}
+        </strong>
+        <span className="text-base leading-snug text-texte-clair/80">{children}</span>
+      </span>
+    </li>
   )
 }
