@@ -227,13 +227,16 @@ export const REGLES_BOT = {
    */
   plafondGardeFou: -200 as Centipions,
   /**
-   * ⚠️ L'abandon est verrouillé sur le **temps**, pas sur l'évaluation.
-   * Conditionner la fin de partie à un seuil d'évaluation coupe du contenu :
-   * c'est arrivé deux fois. Le nombre de coups est la seule grandeur qu'on contrôle.
+   * ⚠️ La partie s'arrête au coup `NOMBRE_DE_COUPS`, **et sur rien d'autre**.
+   * Conditionner la fin à un seuil d'évaluation a coupé du contenu trois fois de
+   * suite dans ce projet. Le nombre de coups est la seule grandeur qu'on contrôle.
    */
   abandonApresCoup: NOMBRE_DE_COUPS as NumeroCoup,
-  /** Condition de crédibilité secondaire, garantie par le garde-fou. */
-  abandonSeuilEval: -300 as Centipions
+  /**
+   * Écart au-delà duquel on déclare un vainqueur plutôt qu'une nulle, en fin de
+   * partie. Sert à **lire** le résultat, jamais à décider de la fin.
+   */
+  seuilAvantage: 150 as Centipions
 } as const
 
 /** Livre d'ouverture : 4 coups scriptés, fiabilité mesurée 91 %. Le bot joue les noirs. */

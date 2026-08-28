@@ -16,6 +16,7 @@ import { useJeu } from '../store'
 import { Bouton } from '../juice/Bouton'
 import { feedback } from '../juice/feedback'
 import { NOMBRE_DE_COUPS } from '../types'
+import { BarreAvantage } from './BarreAvantage'
 
 /** L'âge qu'il a aujourd'hui. Le chiffre du jour. */
 export const AGE = 17
@@ -123,6 +124,7 @@ function calculerReste(cible: Date): Reste {
 function Cadeau() {
   const [reste, setReste] = useState(() => calculerReste(DATE_CADEAU))
   const issue = useJeu((s) => s.issue())
+  const evalBot = useJeu((s) => s.evalBot)
   const historique = useJeu((s) => s.historique)
   const progression = useJeu((s) => s.progression)
 
@@ -168,8 +170,10 @@ function Cadeau() {
         </>
       )}
 
-      {/* Des objectifs, jamais des conditions. Ratés, ils ne coûtent rien. */}
-      <div className="mt-2 flex flex-col gap-1 text-sm text-texte-clair/70">
+      {/* Le verdict de la partie : qui avait l'avantage au dernier coup. */}
+      <BarreAvantage evalBot={evalBot} issue={issue} />
+
+      <div className="flex flex-col gap-1 text-sm text-texte-clair/70">
         <span>
           {issue === 'defaite' ? 'Partie de ' : 'Gagné en '}
           <strong className="text-lisere">{coups} coups</strong>

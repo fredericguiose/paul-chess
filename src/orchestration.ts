@@ -12,7 +12,6 @@ import { Chess } from 'chess.js'
 import {
   CAMP_BOT,
   CAMP_JOUEUR,
-  NOMBRE_DE_COUPS,
   plyVersCoup,
   type Camp,
   type Case,
@@ -76,8 +75,8 @@ export function jouerCoupJoueur(from: Case, to: Case, promotion?: string): boole
 /**
  * Le tour du bot. Appelé après l'animation du coup du joueur.
  *
- * Ne décide **jamais** de la fin de partie lui-même : c'est `botPeutAbandonner()`
- * du store qui tranche, et son verrou est temporel (après le 15ᵉ coup du joueur).
+ * Ne décide **jamais** de la fin de partie lui-même : c'est `partieTerminee()` du
+ * store qui tranche, sur le seul nombre de coups joués.
  */
 export async function tourDuBot(): Promise<void> {
   const s = useJeu.getState()
@@ -119,34 +118,25 @@ export async function tourDuBot(): Promise<void> {
 }
 
 /**
- * Après l'animation du coup du bot : soit il abandonne, soit on enchaîne sur
+ * Après l'animation du coup du bot : soit la partie est finie, soit on enchaîne sur
  * l'énigme suivante.
+ *
+ * ⚠️ **La fin ne dépend que du nombre de coups.** Aucun seuil d'évaluation ne décide
+ * de rien : conditionner la fin de partie à une évaluation a coupé du contenu trois
+ * fois de suite dans ce projet. Au dernier coup, celui qui a l'avantage gagne — et
+ * c'est `issue()` qui le lit, une fois, à l'arrivée.
  */
 export function apresCoupDuBot(): void {
   const s = useJeu.getState()
 
-  if (s.botPeutAbandonner()) {
+  if (s.partieTerminee()) {
     s.setPhase('revelation')
     return
   }
 
+  // Mat ou pat avant la limite : la partie s'arrête là, forcément.
   const chess = new Chess(s.fen)
   if (chess.isGameOver()) {
-    s.setPhase('revelation')
-    return
-  }
-
-  /**
-   * ⚠️ Filet de dernier recours : **le jeu doit toujours finir.**
-   *
-   * `botPeutAbandonner()` exige 15 coups **et** une évaluation assez basse. Si le bot
-   * n'est pas assez perdant au 15ᵉ coup, la partie continuait au-delà — et il n'y a
-   * plus d'énigme après la 15ᵉ. Résultat constaté : une carte vide, indéfiniment,
-   * pile au moment du cadeau.
-   *
-   * Passé les 15 énigmes, la position ne décide plus de rien : on révèle.
-   */
-  if (s.enigmesVues() >= NOMBRE_DE_COUPS) {
     s.setPhase('revelation')
     return
   }

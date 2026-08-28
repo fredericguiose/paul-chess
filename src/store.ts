@@ -56,11 +56,15 @@ interface EtatJeu {
   peutPasser: (coup: NumeroCoup) => boolean
   indicesVisibles: (coup: NumeroCoup) => number
   /**
-   * Le bot peut-il abandonner ? **Verrou temporel**, pas évaluatif : conditionner la
-   * fin de partie à un seuil d'évaluation coupe du contenu — c'est arrivé deux fois.
-   * Voir `paul-chess-engine`.
+   * La partie est-elle finie ? **Verrou purement temporel** : `NOMBRE_DE_COUPS`
+   * coups du joueur, point.
+   *
+   * Il n'y a plus d'abandon du bot. La limite de coups est une **vraie limite** :
+   * au dernier coup, celui qui a l'avantage gagne. C'est ce qui rend la partie
+   * sincère — et ça lève l'objection de départ, « une limite annoncée puis non
+   * appliquée est pire qu'aucune limite ». Celle-ci est appliquée.
    */
-  botPeutAbandonner: () => boolean
+  partieTerminee: () => boolean
   /**
    * L'issue de la partie, du point de vue du joueur. Le bot joue désormais pour
    * l'équilibre et **peut gagner** : seule la phrase d'accueil de la révélation
@@ -125,21 +129,17 @@ export const useJeu = create<EtatJeu>()(
         return Math.min(2, Math.floor(echecs / ECHECS_AVANT_INDICE))
       },
 
-      botPeutAbandonner: () => {
-        const { historique, evalBot } = get()
+      partieTerminee: () => {
         // Compte les coups DU JOUEUR effectivement joués.
-        const coupsJoueur = historique.filter((c) => c.camp === CAMP_JOUEUR).length
-        return (
-          coupsJoueur >= REGLES_BOT.abandonApresCoup &&
-          evalBot < REGLES_BOT.abandonSeuilEval
-        )
+        const coupsJoueur = get().historique.filter((c) => c.camp === CAMP_JOUEUR).length
+        return coupsJoueur >= NOMBRE_DE_COUPS
       },
 
       issue: () => {
         const { evalBot } = get()
         // `evalBot` est du point de vue du bot : négatif = le joueur mène.
-        if (evalBot <= -150) return 'victoire'
-        if (evalBot >= 150) return 'defaite'
+        if (evalBot <= -REGLES_BOT.seuilAvantage) return 'victoire'
+        if (evalBot >= REGLES_BOT.seuilAvantage) return 'defaite'
         return 'nulle'
       },
 

@@ -1,77 +1,51 @@
 /**
- * La règle d'abandon.
+ * La fin de partie.
  *
- * ⚠️ **Le verrou est temporel : après le 15ᵉ coup DU JOUEUR, jamais avant.**
- * L'évaluation n'est qu'une condition de crédibilité secondaire, garantie par le
- * garde-fou. Deux bugs déjà rencontrés, même cause racine — conditionner la fin de
- * partie à une évaluation :
- *   1. « abandon à −300 » : la faute met justement le bot entre −300 et −500, il
- *      abandonnait juste après sa propre faute. 8 énigmes vues sur 15.
- *   2. « abandon à −900 ET énigmes vues >= 13 » : coupait les énigmes 14 et 15 —
- *      la plus forte, celle du climax.
+ * ⚠️ **Il n'y a plus d'abandon du bot.** Ce fichier s'appelait ainsi quand le bot
+ * était censé jeter l'éponge après un nombre de coups donné. Mesuré au moteur, ce
+ * réglage produisait une partie grotesque : le garde-fou obligeait le bot à rester
+ * perdant, donc il rendait la position à chaque coup — jusqu'à laisser passer un mat
+ * forcé au 20ᵉ.
  *
- * La décision elle-même appartient à `useJeu.botPeutAbandonner()` (`src/store.ts`),
- * qui l'implémente déjà. Ce module l'**appelle**, il ne la réécrit pas. Tout ce qui
- * suit `botDoitAbandonner` est du diagnostic d'affichage, jamais une seconde règle.
+ * La règle est maintenant celle d'une vraie partie :
+ *
+ *   **`NOMBRE_DE_COUPS` coups. Gagne celui qui mate, ou celui qui a l'avantage
+ *   au dernier coup.**
+ *
+ * La limite est donc réelle et appliquée — ce qui lève l'objection de départ, « une
+ * limite annoncée puis non appliquée est pire qu'aucune limite ».
+ *
+ * Aucun seuil d'évaluation ne décide de la **fin** : seul le compte de coups le fait.
+ * L'évaluation ne sert qu'à lire le **résultat**, une fois, à l'arrivée.
  */
 
 import { useJeu } from '../store'
-import { CAMP_JOUEUR, NOMBRE_DE_COUPS, REGLES_BOT, type Centipions } from '../types'
+import { REGLES_BOT, type Centipions } from '../types'
 
-/** La seule question qui compte. Déléguée au store, source unique de vérité. */
-export const botDoitAbandonner = (): boolean => useJeu.getState().botPeutAbandonner()
+/** La partie est-elle finie ? Uniquement sur le nombre de coups joués. */
+export const partieFinie = (): boolean => useJeu.getState().partieTerminee()
 
-/**
- * Garde-fou de crédibilité, indépendant du calendrier : le joueur est capitaine de la
- * sélection de Guyane. Ne jamais faire abandonner le bot dans une position égale ou
- * gagnante pour lui — il le verrait à l'instant exact du climax.
- */
+/** Le bot est-il en position perdue ? Sert au diagnostic, jamais à finir la partie. */
 export const positionPerduePourLeBot = (evalBot: Centipions): boolean =>
-  evalBot < REGLES_BOT.abandonSeuilEval
+  evalBot <= REGLES_BOT.fauteCible.max
 
-export interface DiagnosticAbandon {
-  /** Coups du joueur effectivement joués. */
-  coupsJoueur: number
-  /** Coups du joueur restants avant l'ouverture du verrou temporel. */
+export interface DiagnosticFin {
+  coupsJoues: number
   coupsRestants: number
   evalBot: Centipions
-  /** Le 15ᵉ coup du joueur est-il joué ? */
-  verrouTemporelOuvert: boolean
-  /** L'évaluation rend-elle l'abandon crédible ? */
-  credibiliteOk: boolean
-  enigmesVues: number
-  /** Verdict, tel que rendu par le store. */
-  autorise: boolean
+  issue: 'victoire' | 'nulle' | 'defaite'
+  terminee: boolean
 }
 
-/**
- * Pour la console de secours et les tests. Les champs sont indicatifs ;
- * `autorise` vient du store, jamais d'un recalcul local.
- */
-export function diagnosticAbandon(): DiagnosticAbandon {
-  const { historique, evalBot } = useJeu.getState()
-  const coupsJoueur = historique.filter((c) => c.camp === CAMP_JOUEUR).length
+/** Photo de l'état de fin, pour les tests et la mise au point. */
+export function diagnosticFin(): DiagnosticFin {
+  const s = useJeu.getState()
+  const coupsJoues = s.historique.filter((c) => c.camp === 'blancs').length
   return {
-    coupsJoueur,
-    coupsRestants: Math.max(0, REGLES_BOT.abandonApresCoup - coupsJoueur),
-    evalBot,
-    verrouTemporelOuvert: coupsJoueur >= REGLES_BOT.abandonApresCoup,
-    credibiliteOk: positionPerduePourLeBot(evalBot),
-    enigmesVues: useJeu.getState().enigmesVues(),
-    autorise: botDoitAbandonner()
+    coupsJoues,
+    coupsRestants: Math.max(0, REGLES_BOT.abandonApresCoup - coupsJoues),
+    evalBot: s.evalBot,
+    issue: s.issue(),
+    terminee: s.partieTerminee()
   }
-}
-
-/**
- * Aucune condition de défaite. Jamais : pas de limite de coups, pas de chronomètre,
- * pas de game over. Le cadeau est derrière le jeu, devant huit personnes — et une
- * limite annoncée puis non appliquée est pire qu'aucune limite (sa victoire médiane
- * fait 26 coups).
- *
- * `NOMBRE_DE_COUPS` est un **objectif** ratable sans conséquence : le dépasser ne
- * change que la mention à la révélation.
- */
-export const objectifTenu = (): boolean => {
-  const { historique } = useJeu.getState()
-  return historique.filter((c) => c.camp === CAMP_JOUEUR).length <= NOMBRE_DE_COUPS
 }
