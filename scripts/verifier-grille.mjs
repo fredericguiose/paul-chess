@@ -8,10 +8,11 @@ globalThis.localStorage = {
 }
 const s = await createServer({ configFile: false, logLevel: 'error', appType: 'custom', server: { middlewareMode: true } })
 const g = await s.ssrLoadModule('/src/riddles/grille.ts')
+const { NOMBRE_DE_COUPS } = await s.ssrLoadModule('/src/types.ts')
 console.log('slot | nature | type          | énoncé')
 console.log('-----+--------+---------------+' + '-'.repeat(60))
 let ko = 0
-for (let c = 1; c <= 15; c++) {
+for (let c = 1; c <= NOMBRE_DE_COUPS; c++) {
   const e = g.enigmePourCoup(c)
   if (!e) { console.log(String(c).padStart(4) + ' | ⛔ AUCUNE ÉNIGME'); ko++; continue }
   const diag = e.fenPuzzle ? ' [diagramme]' : ''

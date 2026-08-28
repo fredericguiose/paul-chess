@@ -16,13 +16,30 @@ export type Ply = number
 /**
  * Un **coup** : le coup du joueur *et* la réponse du bot. `1.e4 e5` = 1 coup. 1-indexé.
  *
- * ⚠️ Le jeu fait **15 coups = 30 demi-coups**, avec une énigme par coup du joueur.
- * Plafonner à 15 *demi-coups* arrêterait la partie au 8ᵉ coup, avec 8 énigmes vues
- * sur 15. C'est la source d'erreur n°1 du projet.
+ * ⚠️ Le jeu fait `NOMBRE_DE_COUPS` coups, soit le double en demi-coups, avec une
+ * énigme par coup du joueur. Plafonner sur des *demi-coups* couperait la partie en
+ * deux et la moitié des énigmes ne serait jamais vue. Source d'erreur n°1 du projet.
  */
 export type NumeroCoup = number
 
-export const NOMBRE_DE_COUPS = 15
+/**
+ * Longueur de la partie, en coups du joueur. **Une énigme par coup.**
+ *
+ * Se règle ici et nulle part ailleurs : la grille, l'abandon du bot, la barre de
+ * progression et la révélation en dépendent tous.
+ *
+ * Pourquoi 20 :
+ * - il faut au moins autant de slots que d'énigmes personnelles reçues, sinon on en
+ *   jette — et quelqu'un les a écrites. On en attend 13 à 19 ;
+ * - ~2 min par énigme, soit **40 min**, une durée de soirée tenable ;
+ * - surtout, **sa fenêtre de fragilité est le coup 26-30** : 8 % de gaffes contre
+ *   2-4 % ailleurs, mesuré sur 2384 de ses coups. Finir à 30 ferait terminer la
+ *   partie sur ses cinq pires coups. À 20 on est encore loin.
+ *
+ * Les énigmes d'échecs comblent ce que le groupe ne livre pas : il y en a 52 en
+ * réserve, dont 40 positions à diagramme. Le remplissage n'est jamais la contrainte.
+ */
+export const NOMBRE_DE_COUPS = 20
 
 export const plyVersCoup = (ply: Ply): NumeroCoup => Math.floor(ply / 2) + 1
 export const coupVersPly = (coup: NumeroCoup): Ply => (coup - 1) * 2
@@ -78,7 +95,7 @@ export type NatureEnigme = 'echecs' | 'perso'
 
 export interface Enigme {
   id: string
-  /** Slot 1 à 15. Une énigme par coup du joueur. */
+  /** Slot 1 à `NOMBRE_DE_COUPS`. Une énigme par coup du joueur. */
   coup: NumeroCoup
   nature: NatureEnigme
   type: TypeEnigme
@@ -143,13 +160,16 @@ export type PhaseJeu =
 
 // ─────────────────────────────────────────────────────────── juice
 
-/** Intensité de célébration. Croissante — quinze fois la même fatigue dès la quatrième. */
+/** Intensité de célébration. Croissante — répéter la même fatigue dès la quatrième. */
 export type Palier = 'petit' | 'moyen' | 'grand' | 'finale'
 
 export const palierPourCoup = (coup: NumeroCoup): Palier => {
   if (coup >= NOMBRE_DE_COUPS) return 'finale'
-  if (coup >= 11) return 'grand'
-  if (coup >= 6) return 'moyen'
+  // Seuils proportionnels, pas fixes : ils étaient réglés pour 15 coups et ne
+  // suivaient pas quand la partie s'allonge. En proportions, le dernier tiers
+  // reste le plus intense quelle que soit la longueur.
+  if (coup > NOMBRE_DE_COUPS * 0.66) return 'grand'
+  if (coup > NOMBRE_DE_COUPS * 0.33) return 'moyen'
   return 'petit'
 }
 

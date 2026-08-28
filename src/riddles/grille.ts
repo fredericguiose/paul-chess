@@ -1,5 +1,5 @@
 /**
- * La grille des 15 slots — lot C.
+ * La grille des slots d’énigmes — lot C.
  *
  * Assemble deux sources indépendantes (`enigmes.perso.ts`, écrit par le groupe, et
  * `enigmes.echecs.ts`, du remplissage) en exactement `NOMBRE_DE_COUPS` énigmes, une
@@ -14,12 +14,12 @@
  *   évidentes pour lui.
  * - **slot 7** : `ENIGME_COUPLAGE`, verrouillée. Le point de couplage entre le
  *   système d'énigmes et le moteur — elle ne se remplace jamais.
- * - **slot 15** : le climax, personnel en priorité.
+ * - **dernier slot** : le climax, personnel en priorité.
  * - **le reste** : les personnelles prennent les meilleurs slots en descendant
- *   depuis 15 ; les échecs comblent le reste en montant depuis 4.
+ *   depuis le dernier ; les échecs comblent le reste en montant depuis le début.
  *
  * Conséquence utile : si le groupe ne livre que 5 énigmes, elles tombent sur les
- * 5 meilleurs slots (15, 14, 13, 12, 11) au lieu d'être dispersées. **La qualité du
+ * 5 meilleurs slots, les derniers, au lieu d'être dispersées. **La qualité du
  * final ne dépend pas du volume produit.**
  */
 
@@ -50,12 +50,37 @@ const MAX_OFFSCREEN = 2
 
 /**
  * Ordre de préférence des personnelles : le meilleur slot d'abord, en descendant.
- * La première énigme du fichier prend donc le slot 15.
+ * La première énigme du fichier prend donc le dernier slot.
  */
-const ORDRE_PERSO: NumeroCoup[] = [15, 14, 13, 12, 11, 10, 9, 8, 6, 5, 4]
+/**
+ * Les slots réservés à la mise en route : enjeu minimal, réponses évidentes pour lui.
+ * Le remplissage d'échecs y va en premier.
+ */
+const SLOTS_MISE_EN_ROUTE = 3
+
+/**
+ * Slots des énigmes personnelles, **du meilleur au moins bon**, calculés depuis
+ * `NOMBRE_DE_COUPS`.
+ *
+ * ⚠️ C'était une liste écrite à la main `[15, 14, …]`. En passant la partie de 15 à
+ * 20 coups, les slots 16 à 20 se retrouvaient sans énigme : la grille était la
+ * dernière valeur en dur qui ne suivait pas la constante. Même piège que les seuils
+ * du bot, trois fois de suite.
+ *
+ * On descend depuis le dernier slot jusqu'au premier, en sautant le slot de couplage
+ * et les slots de mise en route.
+ */
+const ORDRE_PERSO: NumeroCoup[] = Array.from(
+  { length: NOMBRE_DE_COUPS },
+  (_, i) => NOMBRE_DE_COUPS - i
+).filter((c) => c !== SLOT_COUPLAGE && c > SLOTS_MISE_EN_ROUTE)
 
 /** Ordre de comblement des échecs : en montant, les slots faibles d'abord. */
-const ORDRE_ECHECS: NumeroCoup[] = [4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15]
+/** Slots du remplissage d'échecs, dans l'ordre croissant : la mise en route d'abord. */
+const ORDRE_ECHECS: NumeroCoup[] = Array.from(
+  { length: NOMBRE_DE_COUPS },
+  (_, i) => i + 1
+).filter((c) => c !== SLOT_COUPLAGE)
 
 /**
  * Dernier filet de sécurité. Si le groupe ne livre rien **et** que le stock d'échecs
@@ -100,7 +125,7 @@ export function construireGrille(
     if (modele) poser(slot, modele)
   }
 
-  // 4. Les personnelles, sur les meilleurs slots libres en descendant depuis 15.
+  // 4. Les personnelles, sur les meilleurs slots libres, en descendant.
   const filePerso = [...perso]
   for (const slot of ORDRE_PERSO) {
     if (filePerso.length === 0) break
