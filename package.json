@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "fetch": "node scripts/fetch-games.mjs pedagopaul",
     "analyze": "node scripts/analyze.mjs",
-    "engine": "node scripts/engine-profile.mjs"
+    "engine": "node scripts/engine-profile.mjs",
+    "verifier": "node src/engine/verifier.mjs && node src/reveal/verifier.mjs"
   },
   "dependencies": {
     "@react-spring/three": "^10.1.2",

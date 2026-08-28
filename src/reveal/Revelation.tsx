@@ -4,19 +4,21 @@
  * La partie est terminée. Tout ce qui précède existe pour amener ici.
  *
  * Le bot joue pour l'équilibre et **peut gagner** : l'issue est réelle. Seule la
- * phrase d'accueil change — le cadeau se dévoile dans tous les cas.
+ * phrase d'accueil change, le cadeau se dévoile dans tous les cas.
  *
- * Deux battements : le grand chiffre de l'âge, puis le cadeau. Le cadeau n'arrive
- * qu'en **octobre**, donc on ne montre pas une photo ni un reçu : on montre un
- * **compte à rebours** qui tourne. C'est la promesse, pas l'objet.
+ * Trois battements, dans cet ordre : on **ferme la partie** (position finale, barre
+ * d'avantage, chiffres), puis le grand chiffre de l'âge, puis le cadeau. La partie
+ * et l'anniversaire ne doivent pas se disputer le même écran.
+ *
+ * Le cadeau n'arrive qu'en **octobre**, donc on ne montre pas une photo ni un reçu :
+ * on montre un compte à rebours qui tourne. C'est la promesse, pas l'objet.
  */
 
 import { useEffect, useState } from 'react'
 import { useJeu } from '../store'
 import { Bouton } from '../juice/Bouton'
 import { feedback } from '../juice/feedback'
-import { NOMBRE_DE_COUPS } from '../types'
-import { BarreAvantage } from './BarreAvantage'
+import { FinDePartie } from './FinDePartie'
 
 /** L'âge qu'il a aujourd'hui. Le chiffre du jour. */
 export const AGE = 17
@@ -27,15 +29,18 @@ export const DATE_CADEAU = new Date('2026-10-10T00:00:00')
 export const NOM_CADEAU = 'Ton échiquier'
 
 export function Revelation() {
-  /** `age` : le grand chiffre. `blague` : la fausse peur. `cadeau` : le compte à rebours. */
-  const [etape, setEtape] = useState<'age' | 'blague' | 'cadeau'>('age')
+  /**
+   * `partie` : la position finale et le verdict. `age` : le grand chiffre.
+   * `blague` : la fausse peur. `cadeau` : le compte à rebours.
+   *
+   * La partie se ferme d'abord, l'anniversaire commence ensuite. Mélanger les deux
+   * abîmait les deux : les confettis ne partent donc qu'à l'entrée de `age`, pas
+   * ici.
+   */
+  const [etape, setEtape] = useState<'partie' | 'age' | 'blague' | 'cadeau'>('partie')
   const issue = useJeu((s) => s.issue())
 
-  // Le grand feu d'artifice, une seule fois, à l'entrée.
-  useEffect(() => {
-    feedback('finale', { texte: `${AGE} ANS !!!` })
-  }, [])
-
+  if (etape === 'partie') return <FinDePartie onSuite={() => setEtape('age')} />
   if (etape === 'age') {
     // La fausse peur n'a de sens que s'il a vraiment perdu.
     return <Age onSuite={() => setEtape(issue === 'defaite' ? 'blague' : 'cadeau')} />
@@ -107,6 +112,13 @@ function Age({ onSuite }: { onSuite: () => void }) {
   const [pret, setPret] = useState(false)
   const issue = useJeu((s) => s.issue())
 
+  // Le grand feu d'artifice part ici, à l'entrée de cet écran, et nulle part
+  // ailleurs. Lancé plus tôt il tombait sur la position finale, où il n'avait rien
+  // à célébrer.
+  useEffect(() => {
+    feedback('finale', { texte: `${AGE} ANS !!!` })
+  }, [])
+
   // Le bouton n'apparaît qu'après quelques secondes : sinon on traverse le moment
   // sans le voir, et c'est tout son intérêt.
   useEffect(() => {
@@ -167,23 +179,19 @@ function calculerReste(cible: Date): Reste {
  * Il ne reçoit l'échiquier qu'en octobre. Montrer une photo ou un reçu aujourd'hui
  * serait montrer un objet qu'il n'a pas ; un compteur qui tourne montre l'attente,
  * et il peut revenir le regarder.
+ *
+ * ⚠️ La barre d'avantage et les statistiques de partie **ne sont plus ici** : elles
+ * sont sur `FinDePartie`. Les remettre reviendrait à lui annoncer son cadeau et à
+ * lui demander de relire son score dans le même souffle.
  */
 function Cadeau() {
   const [reste, setReste] = useState(() => calculerReste(DATE_CADEAU))
   const issue = useJeu((s) => s.issue())
-  const evalBot = useJeu((s) => s.evalBot)
-  const historique = useJeu((s) => s.historique)
-  const progression = useJeu((s) => s.progression)
 
   useEffect(() => {
     const t = setInterval(() => setReste(calculerReste(DATE_CADEAU)), 1000)
     return () => clearInterval(t)
   }, [])
-
-  const coups = historique.filter((c) => c.camp === 'blancs').length
-  const sansIndice = Object.values(progression).filter(
-    (p) => p.resolue && p.indicesReveles === 0
-  ).length
 
   const dateLisible = DATE_CADEAU.toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -213,26 +221,13 @@ function Cadeau() {
             <Case valeur={reste.secondes} libelle="s" />
           </div>
 
-          <p className="text-base text-texte-clair/70">le {dateLisible}</p>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-base text-texte-clair/70">le {dateLisible}</p>
+            {/* La vraie raison du délai, dite comme une vanne plutôt qu'excusée. */}
+            <p className="text-sm text-texte-clair/50">(le temps qu’Ibrahim le commande)</p>
+          </div>
         </>
       )}
-
-      {/* Le verdict de la partie : qui avait l'avantage au dernier coup. */}
-      <BarreAvantage evalBot={evalBot} issue={issue} />
-
-      <div className="flex flex-col gap-1 text-sm text-texte-clair/70">
-        <span>
-          {issue === 'defaite' ? 'Partie de ' : 'Gagné en '}
-          <strong className="text-lisere">{coups} coups</strong>
-          {issue !== 'defaite' && coups <= NOMBRE_DE_COUPS && ', dans les temps'}
-        </span>
-        {sansIndice > 0 && (
-          <span>
-            <strong className="text-lisere">{sansIndice}</strong> énigme
-            {sansIndice > 1 ? 's' : ''} trouvée{sansIndice > 1 ? 's' : ''} sans indice
-          </span>
-        )}
-      </div>
     </div>
   )
 }
